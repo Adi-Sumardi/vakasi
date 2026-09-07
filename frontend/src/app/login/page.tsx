@@ -90,7 +90,7 @@ export default function LoginPage() {
               <img
                 alt="Portal VAKASI - Ekosistem Sianggar"
                 className="h-10 w-auto object-contain"
-                src="https://lh3.googleusercontent.com/aida/AEtjO1VjAZ6YvvtPYKqQpOx4h0ZuBAamCK-LYQ8nrp9ziuR0Q5sWDYblLibPi8x-DM5UYKmX9-pY_OX-eR5hMtXn1R1MeZYUWjHOZaQJQ4_0P4xEHmlz8tfNjWwIqlRxDAv5X_PBSpAn2bydI6pi94srq2cK6W-FEdcCOfNzl2IFas4o_TepPyKUijJ7eeM0d3CirlmNB3lKo76C5Vw1HA1a_RFOxslqeVxy1DlWoR88c7ZcpuQSfBzlCm4e-Oij"
+                src="/logo.png"
               />
             </div>
             <div className="inline-flex items-center gap-space-xs px-space-sm py-space-2xs rounded-full bg-surface-container-low text-primary mb-space-xs">
