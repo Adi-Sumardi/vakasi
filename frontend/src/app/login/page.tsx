@@ -107,27 +107,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Security & Institutional Assurance Badge Strip */}
-          <div className="grid grid-cols-3 gap-space-xs p-space-xs bg-surface-container-low rounded-xl">
-            <div className="flex items-center justify-center gap-space-xs p-space-xs text-center">
-              <Icon name="verified_user" className="text-primary text-[18px]" />
-              <span className="font-label-sm text-label-sm text-on-surface font-medium truncate">
-                Dapodik &amp; BKN
-              </span>
-            </div>
-            <div className="flex items-center justify-center gap-space-xs p-space-xs text-center">
-              <Icon name="sync_saved_locally" className="text-tertiary text-[18px]" />
-              <span className="font-label-sm text-label-sm text-on-surface font-medium truncate">
-                SIPD / BOS Kemdikbud
-              </span>
-            </div>
-            <div className="flex items-center justify-center gap-space-xs p-space-xs text-center">
-              <Icon name="gavel" className="text-primary-container text-[18px]" />
-              <span className="font-label-sm text-label-sm text-on-surface font-medium truncate">
-                Juknis BOS TA 2025
-              </span>
-            </div>
-          </div>
+
 
           {/* Mode Selector Tabs */}
           <div className="flex p-space-2xs bg-surface-container rounded-lg" role="tablist">
@@ -164,12 +144,9 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-space-md" noValidate>
               {/* Satker Selector */}
               <div className="flex flex-col gap-space-2xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-label-md text-label-md uppercase tracking-wider text-secondary" htmlFor="satker-select">
-                    Pilih Sekolah / Satuan Pendidikan
-                  </label>
-                  <span className="font-label-sm text-label-sm text-primary font-semibold">Aktif TA 2025</span>
-                </div>
+                <label className="font-label-md text-label-md uppercase tracking-wider text-secondary" htmlFor="satker-select">
+                  Pilih Sekolah / Satuan Pendidikan
+                </label>
                 <div className="relative">
                   <select
                     id="satker-select"
@@ -211,12 +188,9 @@ export default function LoginPage() {
 
               {/* Email Input */}
               <div className="flex flex-col gap-space-2xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-label-md text-label-md uppercase tracking-wider text-secondary" htmlFor="email-input">
-                    Alamat Email Terdaftar
-                  </label>
-                  <span className="font-label-sm text-label-sm text-secondary font-mono">Belajar.id / Resmi</span>
-                </div>
+                <label className="font-label-md text-label-md uppercase tracking-wider text-secondary" htmlFor="email-input">
+                  Alamat Email Terdaftar
+                </label>
                 <div className="relative">
                   <input
                     id="email-input"
@@ -458,44 +432,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Divider Bar */}
-          <div className="relative flex items-center justify-center my-space-2xs">
-            <div className="w-full h-px bg-surface-container-high" />
-            <span className="absolute bg-surface-container-lowest px-space-sm font-label-sm text-label-sm uppercase tracking-wider text-secondary">
-              Fitur Administrasi Sekolah
-            </span>
-          </div>
 
-          {/* System Highlights Grid: Micro Metrics & Pillars */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-xs text-left">
-            <div className="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex flex-col gap-space-2xs">
-              <Icon name="rule" className="text-primary text-[18px]" />
-              <span className="font-label-md text-label-md font-semibold text-on-surface">Tarif Juknis BOS</span>
-              <span className="font-body-sm text-body-sm text-secondary">Standar tarif honor panitia &amp; pengawas.</span>
-            </div>
-            <div className="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex flex-col gap-space-2xs">
-              <Icon name="receipt_long" className="text-tertiary text-[18px]" />
-              <span className="font-label-md text-label-md font-semibold text-on-surface">SPJ Otomatis</span>
-              <span className="font-body-sm text-body-sm text-secondary">Kuitansi honor guru &amp; tanda terima siap cetak.</span>
-            </div>
-            <div className="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex flex-col gap-space-2xs">
-              <Icon name="account_balance_wallet" className="text-primary-container text-[18px]" />
-              <span className="font-label-md text-label-md font-semibold text-on-surface">CMS Bank Sekolah</span>
-              <span className="font-body-sm text-body-sm text-secondary">Penyaluran transfer rekening honorer &amp; guru.</span>
-            </div>
-          </div>
-
-          {/* Helpdesk & Support Line */}
-          <div className="flex flex-col sm:flex-row items-center justify-between pt-space-xs text-secondary font-body-sm text-body-sm gap-2">
-            <div className="flex items-center gap-space-xs">
-              <Icon name="check_circle" className="text-[16px] text-tertiary" />
-              <span>Server SIM Sekolah Terhubung</span>
-            </div>
-            <a href="#" className="font-label-sm text-label-sm text-primary hover:underline font-semibold flex items-center gap-1">
-              <Icon name="support_agent" className="text-[16px]" />
-              <span>Helpdesk TU Sekolah</span>
-            </a>
-          </div>
         </div>
       </main>
 
