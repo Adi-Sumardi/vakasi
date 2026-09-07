@@ -1,0 +1,383 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens ported from mockup/vakasi_enterprise_financial/DESIGN.md
+ * and the mockup/*\/code.html screens (Material 3-style role names:
+ * surface, on-surface, primary-container, etc). Keep names in sync with
+ * those files if the mockups are ever updated.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: 0.5rem;
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Material-3-style surface/role tokens straight from the mockups. */
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-surface-tint: var(--surface-tint);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  --color-primary-fixed: var(--primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+
+  /* Named spacing scale, so classes like px-space-lg / w-sidebar-width
+     used verbatim in the mockups work as real Tailwind utilities. */
+  --spacing-space-2xs: 0.125rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-base: 1rem;
+  --spacing-space-lg: 1.25rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-space-2xl: 2rem;
+  --spacing-space-3xl: 3rem;
+  --spacing-sidebar-width: 17.5rem;
+  --spacing-header-height: 4rem;
+  --spacing-data-row-height: 2.75rem;
+  --spacing-data-row-compact: 2.25rem;
+}
+
+:root {
+  /* VAKASI "Modern Institutional Precision" theme (mockup DESIGN.md). */
+  --surface: #f8f9ff;
+  --surface-dim: #cbdbf5;
+  --surface-bright: #f8f9ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #eff4ff;
+  --surface-container: #e5eeff;
+  --surface-container-high: #dce9ff;
+  --surface-container-highest: #d3e4fe;
+  --surface-variant: #d3e4fe;
+  --on-surface: #0b1c30;
+  --on-surface-variant: #434655;
+  --inverse-surface: #213145;
+  --inverse-on-surface: #eaf1ff;
+  --outline: #747686;
+  --outline-variant: #c4c5d7;
+  --surface-tint: #2151da;
+  --primary-container: #1d4ed8;
+  --on-primary-container: #cad3ff;
+  --secondary-container: #dae2fd;
+  --on-secondary-container: #5c647a;
+  --tertiary: #004f35;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #006948;
+  --on-tertiary-container: #76eab6;
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+
+  --primary-fixed: #dce1ff;
+  --primary-fixed-dim: #b7c4ff;
+  --on-primary-fixed: #001551;
+  --on-primary-fixed-variant: #0039b5;
+
+  --secondary-fixed: #dae2fd;
+  --secondary-fixed-dim: #bec6e0;
+  --on-secondary-fixed: #131b2e;
+  --on-secondary-fixed-variant: #3f465c;
+
+  --tertiary-fixed: #85f8c4;
+  --tertiary-fixed-dim: #68dba9;
+  --on-tertiary-fixed: #002114;
+  --on-tertiary-fixed-variant: #005137;
+
+  --background: var(--surface);
+  --foreground: var(--on-surface);
+  --card: var(--surface-container-lowest);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container-lowest);
+  --popover-foreground: var(--on-surface);
+  --primary: oklch(0.35 0.17 262);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.42 0.03 258);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: var(--surface-container-low);
+  --muted-foreground: var(--on-surface-variant);
+  --accent: var(--surface-container);
+  --accent-foreground: var(--on-surface);
+  --destructive: oklch(0.5 0.19 25);
+  --border: var(--outline-variant);
+  --input: var(--outline-variant);
+  --ring: oklch(0.55 0.19 262);
+  --chart-1: oklch(0.48 0.19 262);
+  --chart-2: var(--tertiary-container);
+  --chart-3: oklch(0.75 0.18 70);
+  --chart-4: oklch(0.6 0.22 300);
+  --chart-5: oklch(0.6 0.22 20);
+  --radius: 0.25rem;
+  --sidebar: var(--surface-container-lowest);
+  --sidebar-foreground: var(--on-surface);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--surface-container-low);
+  --sidebar-accent-foreground: var(--on-surface);
+  --sidebar-border: var(--outline-variant);
+  --sidebar-ring: var(--ring);
+}
+
+.dark {
+  --surface: oklch(0.19 0.03 260);
+  --surface-dim: oklch(0.15 0.03 260);
+  --surface-bright: oklch(0.3 0.03 260);
+  --surface-container-lowest: oklch(0.15 0.025 260);
+  --surface-container-low: oklch(0.21 0.03 260);
+  --surface-container: oklch(0.24 0.03 260);
+  --surface-container-high: oklch(0.29 0.03 260);
+  --surface-container-highest: oklch(0.34 0.03 260);
+  --on-surface: oklch(0.93 0.015 260);
+  --on-surface-variant: oklch(0.78 0.02 260);
+  --outline: oklch(0.6 0.02 260);
+  --outline-variant: oklch(0.38 0.02 260);
+  --primary-container: oklch(0.4 0.16 262);
+  --on-primary-container: oklch(0.88 0.06 262);
+  --secondary-container: oklch(0.32 0.03 260);
+  --on-secondary-container: oklch(0.85 0.02 260);
+  --tertiary: oklch(0.75 0.15 155);
+  --on-tertiary: oklch(0.15 0.05 155);
+  --tertiary-container: oklch(0.32 0.08 155);
+  --on-tertiary-container: oklch(0.85 0.15 155);
+  --error-container: oklch(0.35 0.1 20);
+  --on-error-container: oklch(0.92 0.06 15);
+
+  --background: var(--surface);
+  --foreground: var(--on-surface);
+  --card: var(--surface-container-lowest);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container-lowest);
+  --popover-foreground: var(--on-surface);
+  --primary: oklch(0.7 0.16 262);
+  --primary-foreground: oklch(0.15 0.03 262);
+  --secondary: oklch(0.75 0.02 260);
+  --secondary-foreground: oklch(0.15 0.03 260);
+  --muted: var(--surface-container-low);
+  --muted-foreground: var(--on-surface-variant);
+  --accent: var(--surface-container-high);
+  --accent-foreground: var(--on-surface);
+  --destructive: oklch(0.65 0.19 25);
+  --border: var(--outline-variant);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.7 0.16 262);
+  --chart-1: oklch(0.7 0.16 262);
+  --chart-2: var(--tertiary-container);
+  --chart-3: oklch(0.75 0.18 70);
+  --chart-4: oklch(0.65 0.22 300);
+  --chart-5: oklch(0.65 0.22 20);
+  --sidebar: var(--surface-container-lowest);
+  --sidebar-foreground: var(--on-surface);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: oklch(0.15 0.03 262);
+  --sidebar-accent: var(--surface-container-low);
+  --sidebar-accent-foreground: var(--on-surface);
+  --sidebar-border: var(--outline-variant);
+  --sidebar-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Material Symbols Outlined, used via the <Icon> component (lib/icon.tsx). */
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 20;
+  font-size: 1.25rem;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+@utility font-headline-xl {
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+@utility text-headline-xl {
+  font-size: 2rem;
+  line-height: 2.5rem;
+}
+@utility font-headline-lg {
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@utility text-headline-lg {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+@utility font-headline-md {
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+@utility text-headline-md {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+@utility font-headline-sm {
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility text-headline-sm {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+@utility font-currency-display {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum" 1, "cv05" 1;
+}
+@utility text-currency-display {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+}
+@utility font-currency-cell {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-feature-settings: "tnum" 1, "cv05" 1;
+}
+@utility text-currency-cell {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+@utility font-label-lg {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+}
+@utility text-label-lg {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+@utility font-label-md {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+@utility text-label-md {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+@utility font-label-sm {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+@utility text-label-sm {
+  font-size: 0.6875rem;
+  line-height: 0.875rem;
+}
+@utility font-body-lg {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+}
+@utility text-body-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+@utility font-body-md {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+}
+@utility text-body-md {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+@utility font-body-sm {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+}
+@utility text-body-sm {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}

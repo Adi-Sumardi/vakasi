@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>VAKASI - Sistem Honorarium &amp; Tata Usaha</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20;font-size:1.25rem;vertical-align:middle;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"inverse-on-surface":"#eaf1ff","on-background":"#0b1c30","error-container":"#ffdad6","on-primary-fixed-variant":"#0039b5","on-surface-variant":"#434655","on-primary-fixed":"#001551","inverse-surface":"#213145","surface-container-low":"#eff4ff","secondary-fixed":"#dae2fd","on-tertiary-fixed-variant":"#005137","primary-fixed-dim":"#b7c4ff","outline-variant":"#c4c5d7","on-tertiary":"#ffffff","on-secondary-container":"#5c647a","on-primary-container":"#cad3ff","inverse-primary":"#b7c4ff","on-primary":"#ffffff","primary-container":"#1d4ed8","on-surface":"#0b1c30","surface":"#f8f9ff","on-secondary-fixed-variant":"#3f465c","surface-tint":"#2151da","surface-bright":"#f8f9ff","on-tertiary-fixed":"#002114","on-secondary":"#ffffff","tertiary-fixed-dim":"#68dba9","outline":"#747686","secondary-container":"#dae2fd","on-error":"#ffffff","background":"#f8f9ff","surface-container-high":"#dce9ff","tertiary-container":"#006948","tertiary-fixed":"#85f8c4","surface-container-lowest":"#ffffff","on-tertiary-container":"#76eab6","surface-variant":"#d3e4fe","surface-dim":"#cbdbf5","primary":"#0037b0","on-secondary-fixed":"#131b2e","surface-container-highest":"#d3e4fe","error":"#ba1a1a","primary-fixed":"#dce1ff","tertiary":"#004f35","secondary":"#565e74","on-error-container":"#93000a","secondary-fixed-dim":"#bec6e0","surface-container":"#e5eeff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xs":"0.25rem","space-3xl":"3rem","header-height":"4rem","space-md":"0.75rem","space-lg":"1.25rem","space-2xl":"2rem","space-sm":"0.5rem","space-base":"1rem","space-xl":"1.5rem","space-2xs":"0.125rem","data-row-height":"2.75rem","data-row-compact":"2.25rem","sidebar-width":"17.5rem"},"fontFamily":{"currency-display":["Inter"],"headline-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-md":["Inter"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Inter"],"label-md":["Inter"],"headline-xl":["Plus Jakarta Sans"],"label-lg":["Inter"],"label-sm":["Inter"],"body-sm":["Inter"],"currency-cell":["Inter"]},"fontSize":{"currency-display":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-sm":["1.125rem",{"lineHeight":"1.5rem","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","letterSpacing":"-0.02em","fontWeight":"600"}],"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","letterSpacing":"-0.015em","fontWeight":"600"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"label-md":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.025em","fontWeight":"600"}],"headline-xl":["2rem",{"lineHeight":"2.5rem","letterSpacing":"-0.025em","fontWeight":"700"}],"label-lg":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"label-sm":["0.6875rem",{"lineHeight":"0.875rem","letterSpacing":"0.05em","fontWeight":"600"}],"body-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"400"}],"currency-cell":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary"><aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container-lowest border-r border-outline-variant/30 z-50 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><div class="h-header-height px-space-lg flex items-center justify-between border-b border-outline-variant/30"><div class="flex items-center gap-space-sm"><img alt="Logo VAKASI" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VjAZ6YvvtPYKqQpOx4h0ZuBAamCK-LYQ8nrp9ziuR0Q5sWDYblLibPi8x-DM5UYKmX9-pY_OX-eR5hMtXn1R1MeZYUWjHOZaQJQ4_0P4xEHmlz8tfNjWwIqlRxDAv5X_PBSpAn2bydI6pi94srq2cK6W-FEdcCOfNzl2IFas4o_TepPyKUijJ7eeM0d3CirlmNB3lKo76C5Vw1HA1a_RFOxslqeVxy1DlWoR88c7ZcpuQSfBzlCm4e-Oij"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-primary leading-none">VAKASI</span><span class="font-label-sm text-label-sm text-on-surface-variant font-semibold mt-space-2xs">GOVERNANCE</span></div></div><button class="p-space-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors rounded" title="Perkecil Navigasi" type="button"><span class="material-symbols-outlined">menu_open</span></button></div><div class="flex-1 overflow-y-auto px-space-md py-space-md space-y-space-xs"><nav class="space-y-space-2xs" data-active-classes="bg-secondary-container text-primary font-semibold shadow-sm"><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-all group bg-secondary-container text-primary font-semibold shadow-sm" data-path="dashboard" href="#"><span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">grid_view</span><span class="font-label-lg text-label-lg">Dashboard</span></a><details class="group/acc [&amp;_summary::-webkit-details-marker]:none" open=""><summary class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface cursor-pointer select-none transition-all"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-secondary">database</span><span class="font-label-lg text-label-lg font-medium">Master Data</span></div><span class="material-symbols-outlined transition-transform duration-200 group-open/acc:rotate-180 text-secondary text-sm">expand_more</span></summary><div class="pl-space-xl pr-space-xs py-space-2xs space-y-space-2xs border-l border-outline-variant/40 ml-space-lg"><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="pegawai" href="#">Pegawai</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="jabatan" href="#">Jabatan</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="unit" href="#">Unit</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="jenis-kegiatan" href="#">Jenis Kegiatan</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="jenis-honor" href="#">Jenis Honor</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="tarif-honor" href="#">Tarif Honor</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="sumber-dana" href="#">Sumber Dana</a></div></details><details class="group/acc [&amp;_summary::-webkit-details-marker]:none" open=""><summary class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface cursor-pointer select-none transition-all"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-secondary">event_available</span><span class="font-label-lg text-label-lg font-medium">Kegiatan</span></div><span class="material-symbols-outlined transition-transform duration-200 group-open/acc:rotate-180 text-secondary text-sm">expand_more</span></summary><div class="pl-space-xl pr-space-xs py-space-2xs space-y-space-2xs border-l border-outline-variant/40 ml-space-lg"><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="semua-kegiatan" href="#">Semua Kegiatan</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="buat-kegiatan" href="#">Buat Kegiatan</a><a class="flex items-center justify-between px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="menunggu-approval" href="#"><span>Menunggu Approval</span><span class="px-space-xs py-space-2xs rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">4</span></a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="kegiatan-selesai" href="#">Selesai</a></div></details><details class="group/acc [&amp;_summary::-webkit-details-marker]:none" open=""><summary class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface cursor-pointer select-none transition-all"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-secondary">payments</span><span class="font-label-lg text-label-lg font-medium">Honor</span></div><span class="material-symbols-outlined transition-transform duration-200 group-open/acc:rotate-180 text-secondary text-sm">expand_more</span></summary><div class="pl-space-xl pr-space-xs py-space-2xs space-y-space-2xs border-l border-outline-variant/40 ml-space-lg"><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="rekap-honor" href="#">Rekap Honor</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="slip-honor" href="#">Slip Honor</a></div></details><details class="group/acc [&amp;_summary::-webkit-details-marker]:none"><summary class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface cursor-pointer select-none transition-all"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-secondary">account_balance_wallet</span><span class="font-label-lg text-label-lg font-medium">Keuangan</span></div><span class="material-symbols-outlined transition-transform duration-200 group-open/acc:rotate-180 text-secondary text-sm">expand_more</span></summary><div class="pl-space-xl pr-space-xs py-space-2xs space-y-space-2xs border-l border-outline-variant/40 ml-space-lg"><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="anggaran" href="#">Anggaran</a><a class="block px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-body-sm text-body-sm transition-colors" data-path="pembayaran" href="#">Pembayaran</a></div></details><div class="pt-space-sm border-t border-outline-variant/30 my-space-sm"><span class="px-space-md font-label-sm text-label-sm text-outline font-semibold tracking-wider uppercase">Administrasi</span></div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="laporan" href="#"><span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">description</span><span class="font-label-lg text-label-lg">Laporan</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="dokumen" href="#"><span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">folder_open</span><span class="font-label-lg text-label-lg">Dokumen</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="audit-trail" href="#"><span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">receipt_long</span><span class="font-label-lg text-label-lg">Audit Trail</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all group" data-path="pengaturan" href="#"><span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">settings</span><span class="font-label-lg text-label-lg">Pengaturan</span></a></nav></div><div class="p-space-md border-t border-outline-variant/30 bg-surface-container-low/40"><div class="flex items-center justify-between px-space-sm py-space-xs rounded bg-surface-container-lowest border border-outline-variant/40"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm font-semibold text-on-surface">Server Satker: Aktif</span></div><span class="font-label-sm text-label-sm font-mono text-outline">v2.4</span></div></div></aside><div class="pl-sidebar-width min-h-screen flex flex-col"><header class="fixed top-0 left-sidebar-width right-0 h-header-height bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/30 z-40 flex items-center justify-between px-space-xl shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><div class="flex items-center gap-space-lg"><div class="hidden xl:flex items-center px-space-md py-space-xs rounded-full bg-secondary-container/60 text-on-secondary-fixed text-label-sm font-label-sm border border-outline-variant/40 gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span><span>Sistem Honorarium &amp; Kegiatan</span></div><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-space-md text-outline text-lg pointer-events-none">search</span><input class="w-80 h-9 pl-9 pr-14 py-space-xs bg-surface-container-low/60 border border-outline-variant/50 rounded-lg text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:border-primary focus:outline-none transition-all" placeholder="Cari kegiatan, penerima, SK, SPD..." type="text"/><kbd class="absolute right-space-md px-1.5 py-0.5 text-[10px] font-mono font-semibold text-outline bg-surface-container-lowest border border-outline-variant rounded shadow-xs">Ctrl+K</kbd></div><button class="relative p-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" type="button"><span class="material-symbols-outlined">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container-lowest"></span></button></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container-low border border-outline-variant/40"><span class="material-symbols-outlined text-primary text-base">calendar_month</span><span class="font-label-sm text-label-sm font-semibold text-on-surface">TA 2025</span><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-on-tertiary-fixed-variant font-medium">Berjalan</span></div><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-low/70 hover:bg-surface-container border border-outline-variant/40 text-on-surface transition-all" type="button"><span class="material-symbols-outlined text-secondary text-base">account_balance</span><span class="font-label-sm text-label-sm font-medium">Biro Perencanaan &amp; Keuangan</span><span class="material-symbols-outlined text-outline text-sm">arrow_drop_down</span></button><div class="h-6 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-md pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0KpW7blNFCOaPrBd2-frrC5mFeBaJ3QhF8gunT8IuD3pYC1iMPNRpYPMG03j543bpBGCcD4Z3mWTAlixjlwb1wimhNze7YFS5Yzt9H0rsrJfV2oHVj1NkiLcUO1veqsqjX3x-tfH2bDhqWSjmS5bO2WZmADauPkUKWMGSNJiRqR4SEVp6hoNfV2pget3W1DL2wHuHMYz_xPx7kJ1_5h8W40bS3RU_hIefHp-U0H-ZA7vDAje_65rbsw"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Budi Santoso, S.AP</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Staf Tata Usaha</span></div><span class="material-symbols-outlined text-outline text-base">expand_more</span></div></div></header><main class="w-full pt-header-height bg-surface flex-1 px-space-xl py-space-lg"><div class="flex flex-col w-full gap-space-xl">
+<!-- Top Greeting & Executive Actions Bar -->
+<section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-sm">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-secondary-container font-label-sm text-label-sm uppercase tracking-wider">Dashboard Utama Tata Usaha</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sinkronisasi SPAN-Kemenkeu Terakhir: 09:42 WIB</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Selamat datang kembali, Budi Santoso</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Kelola verifikasi honorarium, validasi berkas SPJ, dan monitor penyerapan pagu DIPA TA 2025.</p>
+</div>
+<div class="flex flex-wrap items-center gap-space-md">
+<!-- Period Selector dropdown mockup -->
+<div class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-low rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-base">date_range</span>
+<span class="font-label-lg text-label-lg text-on-surface">TA 2025 - Triwulan I</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">expand_more</span>
+</div>
+<!-- Secondary Action: Export -->
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-lowest hover:bg-surface-container text-on-surface rounded-lg font-label-lg text-label-lg transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-secondary text-base">file_download</span>
+<span>Ekspor Rekap Laporan</span>
+</button>
+<!-- Primary Action: New Activity -->
+<button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary hover:bg-primary-container text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+<span>+ Buat Kegiatan Baru</span>
+</button>
+</div>
+</section>
+<!-- Summary Metric Cards (5 Cards) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-md">
+<!-- Card 1: Draft Kegiatan -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Draft Kegiatan</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-base">edit_note</span>
+</div>
+</div>
+<div class="my-space-sm">
+<span class="font-currency-display text-currency-display text-on-surface tabular-nums">4</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Perlu dilengkapi TU</span>
+</div>
+</div>
+<!-- Card 2: Menunggu Approval -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Menunggu Approval</span>
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined text-base">schedule</span>
+</div>
+</div>
+<div class="my-space-sm">
+<span class="font-currency-display text-currency-display text-on-surface tabular-nums">7</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="font-body-sm text-body-sm text-error font-medium">3 mendekati batas tempo</span>
+</div>
+</div>
+<!-- Card 3: Disetujui -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Disetujui PPK</span>
+<div class="w-8 h-8 rounded-lg bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-base">check_circle</span>
+</div>
+</div>
+<div class="my-space-sm">
+<span class="font-currency-display text-currency-display text-on-surface tabular-nums">18</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="font-body-sm text-body-sm text-tertiary font-medium">Siap diproses Keuangan</span>
+</div>
+</div>
+<!-- Card 4: Selesai -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Selesai SPJ</span>
+<div class="w-8 h-8 rounded-lg bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">done_all</span>
+</div>
+</div>
+<div class="my-space-sm">
+<span class="font-currency-display text-currency-display text-on-surface tabular-nums">42</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Telah dicairkan &amp; SPJ</span>
+</div>
+</div>
+<!-- Card 5: Total Honor Bulan Ini (Hero Highlight) -->
+<div class="bg-primary-container text-on-primary p-space-lg rounded-xl shadow-md flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-primary-container uppercase tracking-wider">Total Honor Mar 2025</span>
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-base">account_balance_wallet</span>
+</div>
+</div>
+<div class="my-space-sm">
+<span class="font-currency-display text-currency-display text-on-primary tabular-nums tracking-tight">Rp 184.650.000</span>
+</div>
+<div class="flex items-center justify-between text-on-primary-container">
+<div class="flex items-center gap-space-2xs">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-tertiary-container bg-tertiary-container/40 px-1.5 py-0.5 rounded">+12.4% vs Feb</span>
+</div>
+<span class="font-body-sm text-body-sm opacity-80">Netto PPh 21</span>
+</div>
+</div>
+</section>
+<!-- Main Content Grid (Two Columns: ~65% / ~35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- LEFT COLUMN (~65% -> 8 cols on lg) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Widget: Action Required -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Pengajuan Membutuhkan Tindakan</h2>
+</div>
+<span class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">warning</span>
+<span>3 Pengajuan Tertunda &gt; 3 Hari</span>
+</span>
+</div>
+<!-- Action Table -->
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="py-space-sm px-space-md">No. Kegiatan / Judul</th>
+<th class="py-space-sm px-space-md">Unit Kerja</th>
+<th class="py-space-sm px-space-md text-right">Total Honor</th>
+<th class="py-space-sm px-space-md">Status &amp; Batas Waktu</th>
+<th class="py-space-sm px-space-md text-center">Aksi Cepat</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Item 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-mono font-bold text-primary">KGT-2025-089</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface line-clamp-1">Workshop Evaluasi Kurikulum Merdeka</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SBM 2025: Narasumber &amp; Moderator (5 Orang)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-medium text-on-surface">Biro Akademik</span>
+<span class="block text-on-surface-variant text-[11px]">Akun: 521213</span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap font-currency-cell text-currency-cell text-on-surface tabular-nums">
+                  Rp 24.500.000
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 text-error font-semibold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                      Menunggu PPK (Sisa 1 Hari)
+                    </span>
+<span class="text-on-surface-variant text-[11px]">Tenggat: 28 Mar 2025</span>
+</div>
+</td>
+<td class="py-space-md px-space-md text-center whitespace-nowrap">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-md py-1 bg-primary text-on-primary rounded font-label-sm text-label-sm hover:bg-primary-container transition-all" type="button">Review</button>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="Kirim Pengingat ke PPK" type="button">
+<span class="material-symbols-outlined text-sm">notifications_active</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-mono font-bold text-primary">KGT-2025-092</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface line-clamp-1">Sosialisasi Akreditasi Program Studi Internasional</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Perlu revisi komponen honor panitia pengarah</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-medium text-on-surface">LP3M</span>
+<span class="block text-on-surface-variant text-[11px]">Akun: 521219</span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap font-currency-cell text-currency-cell text-on-surface tabular-nums">
+                  Rp 18.200.000
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 text-secondary font-semibold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Draft Revisi Anggaran
+                    </span>
+<span class="text-on-surface-variant text-[11px]">Dikembalikan oleh Verifikator</span>
+</div>
+</td>
+<td class="py-space-md px-space-md text-center whitespace-nowrap">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-md py-1 bg-secondary-container text-on-secondary-fixed rounded font-label-sm text-label-sm hover:bg-secondary-fixed transition-all" type="button">Lengkapi</button>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="Lihat Catatan Revisi" type="button">
+<span class="material-symbols-outlined text-sm">comment</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-mono font-bold text-primary">KGT-2025-084</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface line-clamp-1">Rapat Koordinasi Penyusunan Renstra 2026</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Honor Tim Penyusun Pokja Rektorat (12 Orang)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-medium text-on-surface">Bagian Perencanaan</span>
+<span class="block text-on-surface-variant text-[11px]">Akun: 521213</span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap font-currency-cell text-currency-cell text-on-surface tabular-nums">
+                  Rp 32.750.000
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 text-primary font-semibold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                      Verifikasi Pajak &amp; Golongan
+                    </span>
+<span class="text-on-surface-variant text-[11px]">PPh 21 Gol. III / IV match</span>
+</div>
+</td>
+<td class="py-space-md px-space-md text-center whitespace-nowrap">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-md py-1 bg-surface-container-high text-on-surface rounded font-label-sm text-label-sm hover:bg-surface-container-highest transition-all" type="button">Verifikasi</button>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="Detail Lampiran SPTJB" type="button">
+<span class="material-symbols-outlined text-sm">attach_file</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Widget: Kegiatan Terbaru with Filter Tabs -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Daftar Kegiatan Terbaru</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Riwayat pengajuan honorarium dan status pencairan Satker Pusat</p>
+</div>
+<!-- Interactive Filter Tabs -->
+<div class="flex items-center p-1 bg-surface-container rounded-lg font-label-sm text-label-sm">
+<button class="px-space-md py-1 bg-surface-container-lowest text-primary font-semibold rounded shadow-xs" type="button">Semua (68)</button>
+<button class="px-space-md py-1 text-on-surface-variant hover:text-on-surface rounded transition-colors" type="button">Berjalan (12)</button>
+<button class="px-space-md py-1 text-on-surface-variant hover:text-on-surface rounded transition-colors" type="button">Menunggu Bayar (5)</button>
+</div>
+</div>
+<!-- Recent Rows Cards/List -->
+<div class="flex flex-col gap-space-xs">
+<!-- Row Item 1 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-md bg-surface rounded-lg hover:bg-surface-container-low transition-all gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-mono text-label-sm text-on-surface-variant font-bold">KGT-2025-095</span>
+<span class="text-outline-variant">•</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Ujian Masuk Program Pascasarjana Gelombang I</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Biro Administrasi Akademik • Penguji: 18 Dosen • DIPA PNBP</span>
+</div>
+</div>
+<div class="flex items-center justify-between sm:justify-end gap-space-lg shrink-0">
+<div class="text-right">
+<span class="font-currency-cell text-currency-cell text-on-surface tabular-nums">Rp 45.900.000</span>
+<span class="block text-[11px] text-on-surface-variant">Diajukan: 24 Mar 2025</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Processing TU
+              </span>
+</div>
+</div>
+<!-- Row Item 2 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-md bg-surface rounded-lg hover:bg-surface-container-low transition-all gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-mono text-label-sm text-on-surface-variant font-bold">KGT-2025-081</span>
+<span class="text-outline-variant">•</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Reviewer Hibah Penelitian Fundamental 2025</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">LPPM • 14 Penilai Eksternal &amp; Internal • BOPTN Riset</span>
+</div>
+</div>
+<div class="flex items-center justify-between sm:justify-end gap-space-lg shrink-0">
+<div class="text-right">
+<span class="font-currency-cell text-currency-cell text-on-surface tabular-nums">Rp 28.000.000</span>
+<span class="block text-[11px] text-tertiary font-medium">SP2D: #98213/2025</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                Paid / SPJ Sah
+              </span>
+</div>
+</div>
+<!-- Row Item 3 -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-md bg-surface rounded-lg hover:bg-surface-container-low transition-all gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined">gavel</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-mono text-label-sm text-on-surface-variant font-bold">KGT-2025-078</span>
+<span class="text-outline-variant">•</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Pengadaan Barang Jasa Pokja Unit Layanan Pengadaan</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Biro Umum &amp; BMN • Honor Pejabat Pengadaan (4 Pokja)</span>
+</div>
+</div>
+<div class="flex items-center justify-between sm:justify-end gap-space-lg shrink-0">
+<div class="text-right">
+<span class="font-currency-cell text-currency-cell text-on-surface tabular-nums">Rp 16.400.000</span>
+<span class="block text-[11px] text-on-surface-variant">SK Rektor No. 441/UN/2025</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                Approved PPK
+              </span>
+</div>
+</div>
+</div>
+<!-- Footer Link -->
+<div class="pt-space-xs text-center">
+<a class="inline-flex items-center gap-space-xs font-label-md text-label-md text-primary hover:underline" href="#">
+<span>Lihat Semua 68 Kegiatan di Register SPJ</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN (~35% -> 4 cols on lg) -->
+<div class="lg:col-span-4 flex flex-col gap-space-xl">
+<!-- Widget: Budget Utilization (Penyerapan Anggaran Honor) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Penyerapan Anggaran Honor</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Pagu DIPA 2025</h2>
+</div>
+<span class="px-space-sm py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold">Aman (Kuota Q1)</span>
+</div>
+<!-- Visual Ring/Metric summary -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center gap-space-lg">
+<div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
+<!-- Inline Circular Progress SVG -->
+<svg class="w-20 h-20 transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="68.4, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<span class="absolute font-headline-sm text-headline-sm text-primary font-bold">68.4%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Realisasi s.d Triwulan I</span>
+<span class="font-headline-sm text-headline-sm text-on-surface tabular-nums">Rp 820.800.000</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">dari Pagu Rp 1.200.000.000</span>
+</div>
+</div>
+<!-- Progress Bars by Unit Kerja -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Penyerapan per Satuan Kerja</span>
+<!-- LPPM (82%) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-medium">LPPM (Riset &amp; PKM)</span>
+<span class="tabular-nums font-semibold text-primary">82%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 82%"></div>
+</div>
+</div>
+<!-- Biro Umum (78%) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-medium">Biro Umum &amp; Kepegawaian</span>
+<span class="tabular-nums font-semibold text-primary">78%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<!-- Biro Keuangan (64%) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-medium">Biro Keuangan &amp; Akuntansi</span>
+<span class="tabular-nums font-semibold text-primary">64%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary-container h-2 rounded-full" style="width: 64%"></div>
+</div>
+</div>
+<!-- Fakultas Vokasi (55%) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-medium">Fakultas Vokasi</span>
+<span class="tabular-nums font-semibold text-secondary">55%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 55%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Widget: Tren Pembayaran Honor per Bulan (CSS/SVG Chart) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Tren Realisasi</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Pengeluaran Honor 2025</h2>
+</div>
+<span class="font-mono text-label-sm text-label-sm text-on-surface-variant">Juta Rupiah</span>
+</div>
+<!-- Custom Bar Visualization -->
+<div class="pt-space-md pb-space-xs flex items-end justify-between gap-space-sm h-40">
+<!-- Jan -->
+<div class="flex-1 flex flex-col items-center gap-space-xs group relative h-full justify-end">
+<div class="absolute -top-6 px-1.5 py-0.5 rounded bg-inverse-surface text-inverse-on-surface text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+              Rp 120.0 Jt
+            </div>
+<div class="w-full bg-primary/40 rounded-t group-hover:bg-primary transition-colors" style="height: 60%"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Jan</span>
+</div>
+<!-- Feb -->
+<div class="flex-1 flex flex-col items-center gap-space-xs group relative h-full justify-end">
+<div class="absolute -top-6 px-1.5 py-0.5 rounded bg-inverse-surface text-inverse-on-surface text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+              Rp 145.2 Jt
+            </div>
+<div class="w-full bg-primary/60 rounded-t group-hover:bg-primary transition-colors" style="height: 72%"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Feb</span>
+</div>
+<!-- Mar (Current) -->
+<div class="flex-1 flex flex-col items-center gap-space-xs group relative h-full justify-end">
+<div class="absolute -top-6 px-1.5 py-0.5 rounded bg-inverse-surface text-inverse-on-surface text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+              Rp 184.6 Jt
+            </div>
+<div class="w-full bg-primary rounded-t group-hover:bg-primary-container transition-colors shadow-xs" style="height: 95%"></div>
+<span class="font-label-sm text-label-sm font-bold text-primary">Mar</span>
+</div>
+<!-- Apr (Projection) -->
+<div class="flex-1 flex flex-col items-center gap-space-xs group relative h-full justify-end">
+<div class="absolute -top-6 px-1.5 py-0.5 rounded bg-inverse-surface text-inverse-on-surface text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">
+              Proyeksi: 160 Jt
+            </div>
+<div class="w-full bg-surface-container-highest border-t-2 border-dashed border-primary/50 rounded-t group-hover:bg-surface-variant transition-colors" style="height: 80%"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apr*</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-on-surface-variant pt-space-xs">
+<span>* Estimasi berdasarkan kalender kegiatan BKN</span>
+<span class="text-primary font-medium cursor-pointer hover:underline">Detail Grafik</span>
+</div>
+</section>
+<!-- Widget: Quick Shortcuts & Regulatory Guidance -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Tautan Cepat Administrasi</span>
+<div class="flex flex-col gap-space-xs">
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-base">policy</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Standar Biaya Masukan (SBM) 2025</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-base">table_view</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Unduh Template Daftar Hadir &amp; Honor</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm group-hover:translate-x-0.5 transition-transform">download</span>
+</a>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-base">calculate</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Kalkulator Pajak PPh 21 (Final &amp; Progresif)</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-base">contact_support</span>
+<span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Helpdesk Pelayanan TU &amp; Keuangan</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+</a>
+</div>
+</section>
+</div>
+</div>
+</div></main></div></body></html>
