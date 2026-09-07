@@ -38,7 +38,7 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   // OTP Simulation states
-  const [otpChannel, setOtpChannel] = useState<'wa' | 'email' | 'sms'>('wa');
+  const [otpChannel, setOtpChannel] = useState<'wa' | 'email'>('wa');
   const [otpSent, setOtpSent] = useState(false);
   const [otpDestination, setOtpDestination] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
@@ -283,27 +283,12 @@ export default function LoginPage() {
           {/* Tab 2: OTP / Instant SSO Mode */}
           {authTab === 'otp' && (
             <div className="flex flex-col gap-space-md">
-              {/* Satker & Role Info Banner */}
-              <div className="flex flex-col gap-space-xs p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40">
-                <div className="flex items-center justify-between font-label-sm text-label-sm text-secondary">
-                  <span className="flex items-center gap-1">
-                    <Icon name="account_balance" className="text-[16px] text-primary" />
-                    20108391 - SMAN 1 Unggulan
-                  </span>
-                  <span className="font-semibold text-primary">TA 2025</span>
-                </div>
-                <div className="text-body-sm text-on-surface-variant flex items-center gap-1">
-                  <Icon name="badge" className="text-[16px] text-secondary" />
-                  <span>Peran: <strong className="text-on-surface">Staf TU / Guru / Panitia Sekolah</strong></span>
-                </div>
-              </div>
-
               {/* OTP Channel Selection */}
               <div className="flex flex-col gap-space-2xs">
                 <label className="font-label-md text-label-md uppercase tracking-wider text-secondary">
                   Tujuan Pengiriman Kode OTP
                 </label>
-                <div className="grid grid-cols-3 gap-space-xs">
+                <div className="grid grid-cols-2 gap-space-xs">
                   <button
                     type="button"
                     onClick={() => setOtpChannel('wa')}
@@ -329,19 +314,6 @@ export default function LoginPage() {
                   >
                     <Icon name="mail" className="text-[18px] text-primary" />
                     <span>Email</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOtpChannel('sms')}
-                    className={cn(
-                      'flex items-center justify-center gap-space-xs p-space-xs rounded-lg font-label-md text-label-md transition-colors border',
-                      otpChannel === 'sms'
-                        ? 'bg-surface-container-lowest border-primary text-primary font-semibold shadow-xs'
-                        : 'bg-surface-container border-transparent text-on-surface hover:bg-surface-container-high'
-                    )}
-                  >
-                    <Icon name="sms" className="text-[18px] text-secondary" />
-                    <span>SMS</span>
                   </button>
                 </div>
               </div>
