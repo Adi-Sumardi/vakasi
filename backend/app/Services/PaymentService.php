@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\HonorDetail;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Exceptions\BusinessValidationException;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -42,6 +45,31 @@ class PaymentService
 
         $totalAmount = (int) $honorDetails->sum('net_amount');
 
+        // generatePaymentNumber() derives the next number from a plain
+        // count(), which two concurrent requests can both read before
+        // either commits — retry on the resulting unique-constraint
+        // violation rather than relying on locking to prevent it.
+        $attempts = 0;
+
+        while (true) {
+            try {
+                return $this->createPayment($activity, $data, $processor, $honorDetails, $totalAmount);
+            } catch (QueryException $e) {
+                $attempts++;
+
+                if ($attempts >= 3 || ! str_contains($e->getMessage(), 'payment_number')) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array{payment_date?: string, payment_method: string, source_account?: string|null, reference_number?: string|null}  $data
+     * @param  Collection<int, HonorDetail>  $honorDetails
+     */
+    private function createPayment(Activity $activity, array $data, User $processor, $honorDetails, int $totalAmount): Payment
+    {
         return DB::transaction(function () use ($activity, $data, $processor, $honorDetails, $totalAmount) {
             $payment = Payment::create([
                 'payment_number' => $this->generatePaymentNumber(),
@@ -101,9 +129,12 @@ class PaymentService
             throw new BusinessValidationException('status', 'Pembayaran hanya dapat diselesaikan dari status PROCESSING.');
         }
 
-        if (! $payment->documents()->exists()) {
+        if (! $payment->documents()->where('document_type', 'bukti_transfer')->exists()) {
             // FLOW.md section 8: "Bukti pembayaran tidak valid -> payment tetap PROCESSING".
-            throw new BusinessValidationException('evidence', 'Bukti pembayaran wajib diunggah sebelum pembayaran diselesaikan.');
+            // Must specifically be bukti_transfer, not just any document
+            // type — a payment shouldn't complete on, say, a stray
+            // surat_tugas attached to it.
+            throw new BusinessValidationException('evidence', 'Bukti pembayaran (bukti transfer) wajib diunggah sebelum pembayaran diselesaikan.');
         }
 
         return DB::transaction(function () use ($payment) {

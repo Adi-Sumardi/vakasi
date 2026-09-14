@@ -36,7 +36,9 @@ class HonorCalculationService
         }
 
         return DB::transaction(function () use ($activity, $items) {
-            $details = collect($items)->map(fn (array $item) => $this->upsertLine($activity, $item));
+            $details = collect($items)
+                ->map(fn (array $item) => $this->upsertLine($activity, $item))
+                ->each->load(['employee', 'honorType']);
 
             $this->budgetService->recalculateCommitted($activity);
 
@@ -55,7 +57,7 @@ class HonorCalculationService
      */
     private function upsertLine(Activity $activity, array $item): HonorDetail
     {
-        $member = $activity->members()->where('employee_id', $item['employee_id'])->first();
+        $member = $activity->members()->with('employee')->where('employee_id', $item['employee_id'])->first();
 
         if (! $member) {
             throw new BusinessValidationException(

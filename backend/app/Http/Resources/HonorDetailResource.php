@@ -16,6 +16,11 @@ class HonorDetailResource extends JsonResource
             'id' => $this->id,
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'honor_type' => new HonorTypeResource($this->whenLoaded('honorType')),
+            'activity' => $this->whenLoaded('activity', fn () => [
+                'id' => $this->activity->id,
+                'activity_code' => $this->activity->activity_code,
+                'name' => $this->activity->name,
+            ]),
             'rate_snapshot' => $this->rate_snapshot,
             'volume' => $this->volume,
             'unit_snapshot' => $this->unit_snapshot,

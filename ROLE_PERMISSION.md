@@ -101,7 +101,14 @@ Semua data operasional sekolah.
 
 ### TU
 
-Data kegiatan dan honor yang menjadi tanggung jawabnya.
+Data kegiatan dan honor yang menjadi tanggung jawabnya (kegiatan yang
+dia buat, `created_by = $user->id`) --- bukan seluruh data operasional
+sekolah. Tanda "✓" pada Permission Matrix (section 3) untuk TU berarti
+"boleh akses fitur ini", bukan "tanpa scope"; scope ownership dari
+section ini tetap berlaku di semua endpoint yang menampilkan data
+kegiatan/honor/anggaran/pembayaran, termasuk `/reports/*` (Laporan,
+Anggaran) --- bukan hanya `/activities`. Lihat section 7.4 untuk
+implementasi query-level-nya.
 
 ### Kepala Sekolah
 
@@ -261,6 +268,14 @@ Jangan mengandalkan filter di sisi frontend (Next.js) --- IDOR harus
 dicegah di query backend, sesuai AI_CODING_RULES.md ("Jangan percaya
 `employee_id`, `activity_id`, atau `payment_id` dari request hanya
 karena user sudah login").
+
+Scope ini wajib konsisten di setiap endpoint yang mengekspos data yang
+sama, bukan hanya endpoint utamanya --- mis. `ActivityController::index`
+dan `ReportService` (dipakai oleh `/reports/activities`,
+`/reports/budget`, `/reports/payments`, `/reports/honors`) sama-sama
+harus menerapkan filter TU/Guru-Tendik di atas, karena keduanya
+menampilkan data kegiatan/anggaran/pembayaran yang sama lewat jalur
+berbeda.
 
 ### 7.5 Response Status
 

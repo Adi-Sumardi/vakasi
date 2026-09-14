@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import {
   Sidebar,
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Icon } from '@/components/ui/icon';
 import type { AuthUser } from '@/lib/api/auth';
+import { listActivities } from '@/lib/api/activities';
 import { NAV_DASHBOARD, NAV_FOOTER, NAV_GROUPS, type NavItem } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +27,17 @@ function isVisible(item: NavItem, permissions: string[]) {
 
 export function AppSidebar({ user }: { user: AuthUser }) {
   const pathname = usePathname();
+  const [pendingApprovalCount, setPendingApprovalCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user.permissions.includes('activities.approve')) {
+      return;
+    }
+
+    listActivities({ status: 'submitted' })
+      .then((activities) => setPendingApprovalCount(activities.length))
+      .catch(() => {});
+  }, [user.permissions, pathname]);
 
   return (
     <Sidebar className="border-r border-outline-variant/30 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
@@ -39,8 +52,8 @@ export function AppSidebar({ user }: { user: AuthUser }) {
             <span className="font-headline-sm text-headline-sm tracking-tight text-primary leading-none font-bold">
               VAKASI
             </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold mt-space-2xs tracking-wider">
-              GOVERNANCE
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold mt-space-2xs">
+              Yayasan Asrama Pelajar Islam
             </span>
           </div>
         </div>
@@ -91,6 +104,7 @@ export function AppSidebar({ user }: { user: AuthUser }) {
                 <SidebarMenu className="space-y-space-2xs">
                   {items.map((item) => {
                     const isActive = pathname === item.href;
+                    const badge = item.href === '/kegiatan/approval' ? (pendingApprovalCount ?? undefined) : item.badge;
                     return (
                       <SidebarMenuItem key={item.href}>
                         <Link
@@ -114,9 +128,9 @@ export function AppSidebar({ user }: { user: AuthUser }) {
                             )}
                             <span>{item.label}</span>
                           </div>
-                          {item.badge !== undefined && (
+                          {badge !== undefined && (typeof badge === 'number' ? badge > 0 : badge.length > 0) && (
                             <span className="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
-                              {item.badge}
+                              {badge}
                             </span>
                           )}
                         </Link>
@@ -173,10 +187,9 @@ export function AppSidebar({ user }: { user: AuthUser }) {
           <div className="flex items-center gap-space-xs">
             <span className="w-2 h-2 rounded-full bg-tertiary"></span>
             <span className="font-label-sm text-label-sm font-semibold text-on-surface">
-              Server Satker: Aktif
+              Sistem Aktif
             </span>
           </div>
-          <span className="font-label-sm text-label-sm font-mono text-outline">v2.4</span>
         </div>
       </SidebarFooter>
     </Sidebar>

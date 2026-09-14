@@ -26,5 +26,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!login|_next/static|_next/image|favicon.ico).*)'],
+  // Also exclude static files served straight out of /public (logo,
+  // icons, etc.) — without this, e.g. /logo.png on the (unauthenticated)
+  // login page itself gets redirected to /login instead of the image.
+  matcher: [
+    '/((?!login|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|avif)$).*)',
+  ],
 };

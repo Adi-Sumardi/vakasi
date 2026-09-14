@@ -22,6 +22,13 @@ export function logout(): Promise<null> {
   return apiFetch<null>('/api/v1/auth/logout', { method: 'POST' });
 }
 
+export function changePassword(currentPassword: string, newPassword: string): Promise<null> {
+  return apiFetch<null>('/api/v1/auth/password', {
+    method: 'PATCH',
+    body: { current_password: currentPassword, password: newPassword },
+  });
+}
+
 export function me(): Promise<AuthUser> {
   return apiFetch<AuthUser>('/api/v1/auth/me');
 }

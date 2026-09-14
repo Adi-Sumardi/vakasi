@@ -20,26 +20,26 @@ class ReportController extends Controller
 
     public function activities(Request $request): JsonResponse
     {
-        return $this->success(ActivityResource::collection($this->reportService->activities($request->all())));
+        return $this->success(ActivityResource::collection($this->reportService->activities($request->all(), $request->user())));
     }
 
     public function honors(Request $request): JsonResponse
     {
-        return $this->success(HonorDetailResource::collection($this->reportService->honors($request->all())));
+        return $this->success(HonorDetailResource::collection($this->reportService->honors($request->all(), $request->user())));
     }
 
     public function employeeHonors(Request $request, int $employee): JsonResponse
     {
-        return $this->success(HonorDetailResource::collection($this->reportService->employeeHonors($employee, $request->all())));
+        return $this->success(HonorDetailResource::collection($this->reportService->employeeHonors($employee, $request->all(), $request->user())));
     }
 
     public function budget(Request $request): JsonResponse
     {
-        return $this->success(BudgetResource::collection($this->reportService->budget($request->all())));
+        return $this->success(BudgetResource::collection($this->reportService->budget($request->all(), $request->user())));
     }
 
     public function payments(Request $request): JsonResponse
     {
-        return $this->success(PaymentResource::collection($this->reportService->payments($request->all())));
+        return $this->success(PaymentResource::collection($this->reportService->payments($request->all(), $request->user())));
     }
 }

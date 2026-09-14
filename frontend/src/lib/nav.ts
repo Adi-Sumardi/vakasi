@@ -44,7 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Semua Kegiatan', href: '/kegiatan', permission: 'activities.view', icon: 'calendar_month' },
       { label: 'Buat Kegiatan', href: '/kegiatan/buat', permission: 'activities.create', icon: 'add_circle' },
-      { label: 'Menunggu Approval', href: '/kegiatan/approval', permission: 'activities.approve', icon: 'hourglass_top', badge: 4 },
+      { label: 'Menunggu Approval', href: '/kegiatan/approval', permission: 'activities.approve', icon: 'hourglass_top' },
       { label: 'Selesai', href: '/kegiatan?status=completed', permission: 'activities.view', icon: 'task_alt' },
     ],
   },
@@ -53,14 +53,13 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: 'payments',
     items: [
       { label: 'Rekap Honor', href: '/honor', permission: 'honors.calculate', icon: 'receipt_long' },
-      { label: 'Slip Honor', href: '/honor/slip', permission: 'documents.view', icon: 'description' },
     ],
   },
   {
     label: 'Keuangan',
     icon: 'account_balance_wallet',
     items: [
-      { label: 'Anggaran', href: '/keuangan/anggaran', permission: 'budget.view', icon: 'account_balance_wallet' },
+      { label: 'Anggaran', href: '/keuangan/anggaran', permission: 'reports.view', icon: 'account_balance_wallet' },
       { label: 'Pembayaran', href: '/keuangan/pembayaran', permission: 'payments.view', icon: 'price_check' },
     ],
   },

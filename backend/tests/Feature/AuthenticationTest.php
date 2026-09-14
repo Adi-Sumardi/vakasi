@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -95,5 +96,27 @@ class AuthenticationTest extends TestCase
         $response->assertOk()->assertJsonPath('success', true);
 
         $this->assertGuest('web');
+    }
+
+    public function test_user_can_change_their_own_password(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'web')->patchJson('/api/v1/auth/password', [
+            'current_password' => 'password',
+            'password' => 'new-strong-password',
+        ])->assertOk();
+
+        $this->assertTrue(Hash::check('new-strong-password', $user->fresh()->password));
+    }
+
+    public function test_change_password_rejects_wrong_current_password(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'web')->patchJson('/api/v1/auth/password', [
+            'current_password' => 'totally-wrong',
+            'password' => 'new-strong-password',
+        ])->assertStatus(422)->assertJsonValidationErrors('current_password');
     }
 }

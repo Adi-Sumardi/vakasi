@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PositionController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\UnitController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -25,9 +27,12 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::patch('/auth/password', [AuthController::class, 'changePassword']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+
+        Route::get('/search', [SearchController::class, 'index']);
 
         // Master Data. ROLE_PERMISSION.md's matrix has no dedicated line
         // for these lookup tables; each reuses the closest related
@@ -73,6 +78,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/activities/{activity}/documents', [DocumentController::class, 'index']);
             Route::get('/activities/{activity}/approvals', [ApprovalController::class, 'forActivity']);
         });
+        Route::middleware('permission:documents.view')
+            ->get('/activities/{activity}/employees/{employee}/honor-slip', [HonorController::class, 'slip']);
         Route::middleware('permission:activities.create')->post('/activities', [ActivityController::class, 'store']);
         Route::middleware('permission:activities.update')->group(function () {
             Route::put('/activities/{activity}', [ActivityController::class, 'update']);
@@ -88,6 +95,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('permission:activities.submit')
             ->post('/activities/{activity}/submit', [ActivityController::class, 'submit']);
 
+        Route::middleware('permission:documents.view')->get('/documents', [DocumentController::class, 'all']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
 
         // Approval
@@ -120,5 +128,13 @@ Route::prefix('v1')->group(function () {
 
         // Audit
         Route::middleware('permission:audit.view')->get('/audit-logs', [AuditLogController::class, 'index']);
+
+        // Users (Pengaturan) — per ROLE_PERMISSION.md matrix, Super Admin only.
+        Route::middleware('permission:users.manage')->group(function () {
+            Route::get('/users', [UserController::class, 'index']);
+            Route::post('/users', [UserController::class, 'store']);
+            Route::put('/users/{user}', [UserController::class, 'update']);
+            Route::get('/roles', [UserController::class, 'roles']);
+        });
     });
 });

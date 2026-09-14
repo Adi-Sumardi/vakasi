@@ -70,8 +70,10 @@
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
   --color-surface-tint: var(--surface-tint);
+  --color-on-primary: var(--on-primary);
   --color-primary-container: var(--primary-container);
   --color-on-primary-container: var(--on-primary-container);
+  --color-on-secondary: var(--on-secondary);
   --color-secondary-container: var(--secondary-container);
   --color-on-secondary-container: var(--on-secondary-container);
   --color-tertiary: var(--tertiary);
@@ -133,8 +135,10 @@
   --outline: #747686;
   --outline-variant: #c4c5d7;
   --surface-tint: #2151da;
+  --on-primary: #ffffff;
   --primary-container: #1d4ed8;
   --on-primary-container: #cad3ff;
+  --on-secondary: #ffffff;
   --secondary-container: #dae2fd;
   --on-secondary-container: #5c647a;
   --tertiary: #004f35;
@@ -208,8 +212,10 @@
   --on-surface-variant: oklch(0.78 0.02 260);
   --outline: oklch(0.6 0.02 260);
   --outline-variant: oklch(0.38 0.02 260);
+  --on-primary: #ffffff;
   --primary-container: oklch(0.4 0.16 262);
   --on-primary-container: oklch(0.88 0.06 262);
+  --on-secondary: #ffffff;
   --secondary-container: oklch(0.32 0.03 260);
   --on-secondary-container: oklch(0.85 0.02 260);
   --tertiary: oklch(0.75 0.15 155);
@@ -264,13 +270,15 @@
   }
 }
 
-/* Material Symbols Outlined, used via the <Icon> component (lib/icon.tsx). */
-.material-symbols-outlined {
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 20;
+/*
+ * Default size for <Icon> (components/ui/icon.tsx, Lucide-based).
+ * The component renders SVGs at size="1em" so existing text-size
+ * utility classes (text-[20px], text-lg, text-sm, ...) sprinkled
+ * across ~40 call sites keep controlling icon size exactly as they
+ * did when icons were a font glyph — this class just sets the
+ * unstyled default to match the old baseline (20px).
+ */
+.icon-glyph {
   font-size: 1.25rem;
   vertical-align: middle;
   line-height: 1;

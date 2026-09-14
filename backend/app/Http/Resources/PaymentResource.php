@@ -28,6 +28,7 @@ class PaymentResource extends JsonResource
             'status' => $this->status,
             'processor' => $this->whenLoaded('processor', fn () => $this->processor->name),
             'details' => PaymentDetailResource::collection($this->whenLoaded('details')),
+            'documents' => DocumentResource::collection($this->whenLoaded('documents')),
         ];
     }
 }

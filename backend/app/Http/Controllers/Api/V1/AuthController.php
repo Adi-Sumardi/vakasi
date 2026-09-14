@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -90,5 +92,20 @@ class AuthController extends Controller
         return $this->success(
             new UserResource($request->user()->load('role.permissions')),
         );
+    }
+
+    /**
+     * Self-service password change — the only way a regular user could
+     * change their password before was asking an admin to reset it via
+     * UserController::update (permission:users.manage).
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->forceFill(['password' => Hash::make($request->validated('password'))])->save();
+
+        $this->auditService->logModel('password_changed', $user);
+
+        return $this->success(message: 'Password berhasil diubah.');
     }
 }

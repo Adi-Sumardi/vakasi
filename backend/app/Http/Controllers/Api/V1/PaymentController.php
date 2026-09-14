@@ -11,6 +11,7 @@ use App\Models\Activity;
 use App\Models\Payment;
 use App\Services\DocumentService;
 use App\Services\PaymentService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,9 +26,22 @@ class PaymentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // ROLE_PERMISSION.md "Payment View" row: TU is "Own" (like
+        // Activities/Documents/Reports), not the unscoped "✓" other
+        // finance/admin roles get — see section 4's TU note.
         $payments = Payment::query()
-            ->with(['activity', 'processor'])
-            ->when($request->string('status')->toString(), fn ($q, $status) => $q->where('status', $status))
+            ->with(['activity', 'processor', 'documents'])
+            ->when(
+                $user->hasRole('tu') && ! $user->hasRole('super_admin', 'admin'),
+                fn (Builder $q) => $q->whereHas('activity', fn (Builder $a) => $a->where('created_by', $user->id)),
+            )
+            ->when(
+                $user->hasRole('guru_tendik') && $user->employee_id,
+                fn (Builder $q) => $q->whereHas('activity.members', fn (Builder $m) => $m->where('employee_id', $user->employee_id)),
+            )
+            ->when($request->string('status')->toString(), fn (Builder $q, $status) => $q->where('status', $status))
             ->latest('payment_date')
             ->paginate(20);
 
@@ -37,6 +51,7 @@ class PaymentController extends Controller
     public function store(StorePaymentRequest $request): JsonResponse
     {
         $activity = Activity::findOrFail($request->validated('activity_id'));
+        $this->authorize('view', $activity);
 
         $payment = $this->paymentService->create($activity, $request->validated(), $request->user());
 
@@ -45,11 +60,15 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): JsonResponse
     {
+        $this->authorize('view', $payment->activity);
+
         return $this->success(new PaymentResource($payment->load(['activity', 'processor', 'details.employee', 'documents'])));
     }
 
     public function process(Payment $payment): JsonResponse
     {
+        $this->authorize('view', $payment->activity);
+
         $payment = $this->paymentService->process($payment);
 
         return $this->success(new PaymentResource($payment), 'Pembayaran sedang diproses.');
@@ -57,6 +76,8 @@ class PaymentController extends Controller
 
     public function evidence(StoreDocumentRequest $request, Payment $payment): JsonResponse
     {
+        $this->authorize('view', $payment->activity);
+
         $document = $this->documentService->store(
             $request->file('file'),
             $request->validated('document_type'),
@@ -69,6 +90,8 @@ class PaymentController extends Controller
 
     public function complete(Payment $payment): JsonResponse
     {
+        $this->authorize('view', $payment->activity);
+
         $payment = $this->paymentService->complete($payment);
 
         return $this->success(new PaymentResource($payment->load(['activity', 'details.employee'])), 'Pembayaran berhasil diselesaikan.');

@@ -21,6 +21,11 @@ class BudgetResource extends JsonResource
             'paid_amount' => $this->paid_amount,
             'remaining_amount' => $this->remaining_amount,
             'status' => $this->status,
+            'activity' => $this->whenLoaded('activity', fn () => [
+                'id' => $this->activity->id,
+                'activity_code' => $this->activity->activity_code,
+                'name' => $this->activity->name,
+            ]),
         ];
     }
 }

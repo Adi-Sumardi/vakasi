@@ -68,6 +68,10 @@ class HonorCalculationTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('data.gross_amount', 200000);
         $response->assertJsonPath('data.net_amount', 200000);
+        // items[].employee/honor_type must be eager-loaded on the response,
+        // not just the aggregate totals — the frontend renders per-line detail.
+        $response->assertJsonPath('data.items.0.employee.name', $employee->name);
+        $response->assertJsonPath('data.items.0.honor_type.name', $honorType->name);
 
         $this->assertDatabaseHas('honor_details', [
             'activity_id' => $activity->id,
