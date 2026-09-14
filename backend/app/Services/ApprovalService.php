@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\User;
 use App\Services\Exceptions\BusinessValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Status transitions per ARSITEKTUR.md section 7 / FLOW.md section 3.
@@ -77,7 +78,12 @@ class ApprovalService
                 'acted_at' => now(),
             ]);
 
-            $activity->update(['status' => Activity::APPROVED, 'approved_at' => now()]);
+            $activity->update([
+                'status' => Activity::APPROVED,
+                'approved_at' => now(),
+                'verification_code' => $activity->verification_code ?? $this->generateVerificationCode(),
+                'approval_document_number' => $activity->approval_document_number ?? $this->generateApprovalDocumentNumber(),
+            ]);
 
             app(BudgetService::class)->approve($activity);
 
@@ -141,6 +147,35 @@ class ApprovalService
         if ($activity->created_by === $approver->id) {
             throw new BusinessValidationException('approver', 'Pembuat pengajuan tidak boleh menyetujui pengajuannya sendiri (separation of duties).');
         }
+    }
+
+    /**
+     * Unguessable — backs a public, unauthenticated verification
+     * endpoint (PublicVerificationController), so it must never be
+     * derivable from the activity's id/code.
+     */
+    private function generateVerificationCode(): string
+    {
+        do {
+            $code = Str::random(40);
+        } while (Activity::where('verification_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Human-facing reference number for the approval document (shown
+     * on the public verification page), distinct from the opaque
+     * verification_code and from activity_code (assigned on creation,
+     * before any approval exists). Follows the same
+     * PREFIX-YEAR-SEQUENCE convention as activity_code/payment_number.
+     */
+    private function generateApprovalDocumentNumber(): string
+    {
+        $year = now()->year;
+        $sequence = Activity::whereYear('approved_at', $year)->whereNotNull('approval_document_number')->count() + 1;
+
+        return sprintf('SK-%d-%04d', $year, $sequence);
     }
 
     private function pendingApproval(Activity $activity): Approval

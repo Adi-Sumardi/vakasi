@@ -9,6 +9,7 @@ use App\Http\Resources\HonorDetailResource;
 use App\Models\Activity;
 use App\Models\Employee;
 use App\Services\HonorCalculationService;
+use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -17,7 +18,10 @@ class HonorController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private readonly HonorCalculationService $honorCalculationService) {}
+    public function __construct(
+        private readonly HonorCalculationService $honorCalculationService,
+        private readonly QrCodeService $qrCodeService,
+    ) {}
 
     public function calculate(CalculateHonorRequest $request, Activity $activity): JsonResponse
     {
@@ -68,6 +72,16 @@ class HonorController extends Controller
             'employee' => $employee,
             'details' => $details,
             'totalNet' => $details->sum('net_amount'),
+            // Only APPROVED-or-later activities carry a
+            // verification_code (ApprovalService::approve) — a slip
+            // for a still-DRAFT/REJECTED activity's honor line
+            // (shouldn't normally happen, but not impossible) simply
+            // prints without a QR rather than erroring.
+            'qrCodeDataUri' => $activity->verification_code
+                ? $this->qrCodeService->generate(
+                    rtrim(config('cors.allowed_origins')[0] ?? '', '/')."/verify/{$activity->verification_code}"
+                )->getDataUri()
+                : null,
         ]);
 
         return $pdf->stream("slip-honor-{$activity->activity_code}-{$employee->employee_code}.pdf");

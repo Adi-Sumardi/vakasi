@@ -67,6 +67,58 @@ class HonorSlipTest extends TestCase
         $response->assertHeader('content-type', 'application/pdf');
     }
 
+    public function test_slip_view_embeds_the_approval_qr_when_provided(): void
+    {
+        $activity = Activity::factory()->create();
+        $employee = Employee::factory()->create();
+        $detail = $this->makeHonorDetail($activity, $employee);
+
+        $html = view('pdf.honor-slip', [
+            'activity' => $activity,
+            'employee' => $employee,
+            'details' => collect([$detail->load('honorType')]),
+            'totalNet' => $detail->net_amount,
+            'qrCodeDataUri' => 'data:image/png;base64,fakepngdata',
+        ])->render();
+
+        $this->assertStringContainsString('data:image/png;base64,fakepngdata', $html);
+    }
+
+    public function test_slip_view_omits_the_qr_block_when_activity_has_no_verification_code(): void
+    {
+        $activity = Activity::factory()->create();
+        $employee = Employee::factory()->create();
+        $detail = $this->makeHonorDetail($activity, $employee);
+
+        $html = view('pdf.honor-slip', [
+            'activity' => $activity,
+            'employee' => $employee,
+            'details' => collect([$detail->load('honorType')]),
+            'totalNet' => $detail->net_amount,
+            'qrCodeDataUri' => null,
+        ])->render();
+
+        $this->assertStringNotContainsString('data:image/png;base64,', $html);
+    }
+
+    public function test_slip_pdf_renders_successfully_when_activity_has_a_verification_code(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'tu'], ['description' => 'TU']);
+        $role->permissions()->syncWithoutDetaching(
+            Permission::firstOrCreate(['name' => 'documents.view'], ['module' => 'documents', 'action' => 'view']),
+        );
+        $tu = User::factory()->create(['role_id' => $role->id]);
+
+        $activity = Activity::factory()->create(['created_by' => $tu->id, 'verification_code' => str_repeat('a', 40)]);
+        $employee = Employee::factory()->create();
+        $this->makeHonorDetail($activity, $employee);
+
+        $response = $this->as($tu)->get("/api/v1/activities/{$activity->id}/employees/{$employee->id}/honor-slip");
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
+
     public function test_non_owner_tu_cannot_download_honor_slip_for_someone_elses_activity(): void
     {
         $role = Role::firstOrCreate(['name' => 'tu'], ['description' => 'TU']);

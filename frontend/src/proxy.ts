@@ -29,7 +29,10 @@ export const config = {
   // Also exclude static files served straight out of /public (logo,
   // icons, etc.) — without this, e.g. /logo.png on the (unauthenticated)
   // login page itself gets redirected to /login instead of the image.
+  // /verify is the public QR-approval verification page (FLOW.md
+  // section 8) — deliberately reachable without a session, same as
+  // its backend counterpart (/api/v1/public/verify/{code}).
   matcher: [
-    '/((?!login|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|avif)$).*)',
+    '/((?!login|verify|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|avif)$).*)',
   ],
 };

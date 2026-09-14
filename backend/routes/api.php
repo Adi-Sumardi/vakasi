@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\HonorTypeController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PositionController;
+use App\Http\Controllers\Api\V1\PublicVerificationController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\UnitController;
@@ -23,6 +24,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+    // Public, unauthenticated — see FLOW.md section 8 / ARSITEKTUR.md
+    // section 11.1. `{code}` is an opaque unguessable token, never the
+    // activity id, so throttling is defense-in-depth, not the primary
+    // guard against enumeration.
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::get('/public/verify/{code}', [PublicVerificationController::class, 'show']);
+        Route::get('/public/verify/{code}/qrcode', [PublicVerificationController::class, 'qrcode']);
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);

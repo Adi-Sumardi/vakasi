@@ -94,6 +94,8 @@ export type Activity = {
   submitted_at: string | null;
   approved_at: string | null;
   completed_at: string | null;
+  verification_code: string | null;
+  approval_document_number: string | null;
   creator?: { id: number; name: string };
   budget?: Budget;
   members?: ActivityMember[];

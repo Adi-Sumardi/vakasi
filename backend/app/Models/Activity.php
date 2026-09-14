@@ -51,6 +51,8 @@ class Activity extends Model
         'approved_at',
         'completed_at',
         'created_by',
+        'verification_code',
+        'approval_document_number',
     ];
 
     protected function casts(): array

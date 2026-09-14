@@ -29,6 +29,7 @@ class ActivityResource extends JsonResource
             'submitted_at' => $this->submitted_at,
             'approved_at' => $this->approved_at,
             'completed_at' => $this->completed_at,
+            'verification_code' => $this->verification_code,
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,

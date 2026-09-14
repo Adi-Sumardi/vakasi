@@ -164,6 +164,33 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
+          {activity.verification_code && (
+            <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs border border-outline-variant/30 flex flex-col items-center text-center gap-space-sm">
+              <div className="self-start">
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Bukti Approval</h3>
+                {activity.approval_document_number && (
+                  <p className="font-body-sm text-body-sm text-on-surface-variant font-mono">{activity.approval_document_number}</p>
+                )}
+              </div>
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/verify/${activity.verification_code}/qrcode`}
+                alt="QR Code bukti approval"
+                className="w-32 h-32"
+              />
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Pindai untuk verifikasi publik, atau bagikan tautan berikut:
+              </p>
+              <a
+                href={`${process.env.NEXT_PUBLIC_APP_URL}/verify/${activity.verification_code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-body-sm text-body-sm text-primary hover:underline break-all"
+              >
+                {process.env.NEXT_PUBLIC_APP_URL}/verify/{activity.verification_code}
+              </a>
+            </div>
+          )}
+
           <ActivityActions
             activity={activity}
             isOwner={isOwner}

@@ -311,11 +311,11 @@ Gunakan API/integration layer:
                        |
                   Integration API
                        |
-             +---------+---------+
-             |                   |
-          SendaGo              SIAKAD
-             |                   |
-          HR / Core           Akademik
+             +---------+---------+---------+
+             |                   |         |
+          SendaGo              SIAKAD   SiHaris / Sianggar
+             |                   |         |
+          HR / Core           Akademik   HR & Pencairan Dana
 ```
 
 Future identity mapping:
@@ -327,6 +327,58 @@ VAKASI employee_id
         |
         +-- external_id = xxxx
 ```
+
+### 11.1 SiHaris & Sianggar --- alur pencairan honor nyata
+
+Didokumentasikan per FLOW.md section 8. QR code approval + endpoint
+verifikasi publik sudah diimplementasikan (lihat di bawah); ekspor
+data ke menu "Vakasi" di SiHaris dan pengajuan pencairan di Sianggar
+belum. Ini berarti VAKASI bukan hanya API-first untuk frontend
+Next.js-nya sendiri (section 10), tapi ke depan juga harus menjadi
+sumber data bagi sistem eksternal --- desain integrasi konkretnya
+(push via webhook vs. SiHaris polling API baru vs. mekanisme lain)
+belum ditentukan.
+
+**QR code approval (✅ diimplementasikan):**
+
+-   `activities.verification_code` (string(40), unique, nullable) ---
+    diisi sekali oleh `ApprovalService::approve()`, `Str::random(40)`,
+    unguessable karena membuka endpoint publik tanpa autentikasi.
+-   `activities.approval_document_number` (string, unique, nullable,
+    format `SK-{tahun}-{urut}`) --- nomor referensi dokumen approval,
+    juga diisi sekali saat approve, terpisah dari verification_code
+    (opaque) dan activity_code (dibuat saat kegiatan dibuat, sebelum
+    ada approval).
+-   `QrCodeService` (`app/Services/QrCodeService.php`, membungkus
+    `endroid/qr-code`) meng-generate PNG dari sebuah URL, tidak pernah
+    dari data mentah.
+-   `PublicVerificationController` (routes/api.php, **di luar**
+    grup `auth:sanctum`, dengan `throttle:30,1`):
+    -   `GET /api/v1/public/verify/{code}` --- JSON berisi
+        activity_code, approval_document_number, name, activity_type,
+        fund_source, unit, location, status, start_date, end_date,
+        approved_at, approved_by, dan members (nama + peran peserta
+        saja). **Tidak pernah** honor amount, budget, atau data bank
+        pegawai.
+    -   `GET /api/v1/public/verify/{code}/qrcode` --- PNG QR yang
+        mengarah ke `{FRONTEND_URL}/verify/{code}`.
+-   Frontend: `frontend/src/app/verify/[code]/page.tsx` (Server
+    Component publik, dikecualikan dari redirect-login di `proxy.ts`)
+    dan kartu "Bukti Approval" di halaman detail kegiatan. QR yang
+    sama juga tercetak di slip honor PDF (`HonorController::slip`).
+
+Pertanyaan terbuka yang masih perlu dijawab sebelum lanjut ke
+integrasi SiHaris/Sianggar:
+
+-   Apakah "SendaGo" pada diagram di atas adalah sistem yang sama
+    dengan "SiHaris", atau dua sistem berbeda?
+-   Bagaimana status Payment VAKASI (VERIFIED → PROCESSING → PAID →
+    COMPLETED, section 8) berhubungan dengan pencairan yang
+    sesungguhnya terjadi di Sianggar --- apakah keduanya independen,
+    atau status PAID VAKASI seharusnya mengikuti konfirmasi dari
+    Sianggar?
+-   Autentikasi/otorisasi apa yang dipakai SiHaris untuk menarik
+    data dari VAKASI (service-to-service token, API key, OAuth)?
 
 ## 12. Deployment
 

@@ -18,8 +18,10 @@
         .text-right { text-align: right; }
         .total-row td { font-weight: bold; background: #f7f7f7; }
         .signature { margin-top: 40px; width: 100%; }
-        .signature td { width: 50%; text-align: center; vertical-align: top; }
+        .signature td { width: 33.33%; text-align: center; vertical-align: top; }
         .signature .space { height: 60px; }
+        .qr-box img { width: 80px; height: 80px; }
+        .qr-box p { margin: 4px 0 0; font-size: 9px; color: #666; }
         .footer-note { margin-top: 24px; font-size: 10px; color: #666; }
     </style>
 </head>
@@ -96,6 +98,14 @@
                 <div class="space"></div>
                 (........................................)
             </td>
+            @if ($qrCodeDataUri)
+                <td class="qr-box">
+                    Bukti Approval
+                    <br>
+                    <img src="{{ $qrCodeDataUri }}" alt="QR Approval">
+                    <p>Pindai untuk verifikasi</p>
+                </td>
+            @endif
             <td>
                 {{ now()->format('d F Y') }}<br>Penerima
                 <div class="space"></div>
