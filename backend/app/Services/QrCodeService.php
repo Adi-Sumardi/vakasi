@@ -18,4 +18,15 @@ class QrCodeService
     {
         return (new Builder(writer: new PngWriter, data: $data, size: 300, margin: 10))->build();
     }
+
+    /**
+     * The public verification URL a scanner lands on. Built from
+     * config('app.frontend_url') — callers used to read
+     * config('cors.allowed_origins')[0], which made a user-facing link
+     * depend on the ordering of a CORS allowlist.
+     */
+    public function verificationUrl(string $verificationCode): string
+    {
+        return rtrim((string) config('app.frontend_url'), '/')."/verify/{$verificationCode}";
+    }
 }

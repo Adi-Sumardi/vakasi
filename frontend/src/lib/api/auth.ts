@@ -29,6 +29,23 @@ export function changePassword(currentPassword: string, newPassword: string): Pr
   });
 }
 
+/**
+ * Always resolves with the same neutral message whether or not the
+ * address is registered — the API deliberately does not reveal it.
+ */
+export function forgotPassword(email: string): Promise<null> {
+  return apiFetch<null>('/api/v1/auth/forgot-password', { method: 'POST', body: { email } });
+}
+
+export function resetPassword(input: {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}): Promise<null> {
+  return apiFetch<null>('/api/v1/auth/reset-password', { method: 'POST', body: input });
+}
+
 export function me(): Promise<AuthUser> {
   return apiFetch<AuthUser>('/api/v1/auth/me');
 }

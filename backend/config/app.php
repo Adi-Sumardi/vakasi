@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | Public base URL of the Next.js SPA. Used to build links that leave
+    | the API — QR verification targets and password reset links. This was
+    | previously read from config('cors.allowed_origins')[0], which tied a
+    | user-facing URL to the order of a CORS allowlist.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', explode(',', (string) env('FRONTEND_URLS', 'http://localhost:3000'))[0]),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

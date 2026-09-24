@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Public, unauthenticated verification for the QR code generated on
  * Kepala Sekolah approval — see FLOW.md section 8 / ARSITEKTUR.md
  * section 11.1. Deliberately excluded from auth:sanctum (routes.php)
- * since the whole point is that anyone scanning the QR (SiHaris,
+ * since the whole point is that anyone scanning the QR (Sianggar,
  * Sianggar, an auditor, a parent) can confirm the approval is real
  * without a VAKASI account.
  *
@@ -73,7 +73,7 @@ class PublicVerificationController extends Controller
             abort(404);
         }
 
-        $result = $this->qrCodeService->generate(rtrim(config('cors.allowed_origins')[0] ?? '', '/')."/verify/{$code}");
+        $result = $this->qrCodeService->generate($this->qrCodeService->verificationUrl($code));
 
         return new Response($result->getString(), 200, ['Content-Type' => $result->getMimeType()]);
     }

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from 'next/image';
+import Link from 'next/link';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -60,9 +62,12 @@ export default function LoginPage() {
         {/* Left: form */}
         <div className="w-full md:w-[55%] p-space-xl sm:p-space-2xl flex flex-col justify-center gap-space-lg">
           <div className="flex items-center gap-space-sm">
-            <img
+            <Image
               alt="Logo VAKASI"
               src="/logo.png"
+              width={40}
+              height={40}
+              priority
               className="h-10 w-10 rounded-xl object-contain bg-surface-container-low p-1"
             />
             <div className="flex flex-col">
@@ -119,9 +124,12 @@ export default function LoginPage() {
                 <label className="font-label-md text-label-md text-on-surface font-semibold" htmlFor="pwd-input">
                   Password
                 </label>
-                <a href="#" className="font-label-sm text-label-sm text-primary hover:underline font-semibold">
+                <Link
+                  href="/forgot-password"
+                  className="font-label-sm text-label-sm text-primary hover:underline font-semibold"
+                >
                   Lupa password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Icon
