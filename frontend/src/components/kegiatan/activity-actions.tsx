@@ -7,18 +7,16 @@ import { toast } from 'sonner';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { approveActivity, cancelActivity, rejectActivity, submitActivity, type Activity } from '@/lib/api/activities';
-import { createPayment } from '@/lib/api/payments';
 
 type Props = {
   activity: Activity;
   isOwner: boolean;
   canSubmit: boolean;
   canApprove: boolean;
-  canProcessPayment: boolean;
   canManage: boolean;
 };
 
-export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canProcessPayment, canManage }: Props) {
+export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canManage }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -54,10 +52,9 @@ export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canP
 
   const showSubmit = canSubmit && isOwner && ['draft', 'rejected'].includes(activity.status);
   const showApprove = canApprove && activity.status === 'submitted';
-  const showCreatePayment = canProcessPayment && activity.status === 'approved';
   const showCancel = canManage && isOwner && activity.status === 'draft';
 
-  if (!showSubmit && !showApprove && !showCreatePayment && !showCancel) {
+  if (!showSubmit && !showApprove && !showCancel) {
     return null;
   }
 
@@ -136,22 +133,11 @@ export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canP
         </div>
       )}
 
-      {showCreatePayment && (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() =>
-            run(
-              () => createPayment({ activity_id: activity.id, payment_method: 'transfer_bank' }),
-              'Pembayaran berhasil dibuat, lanjutkan di menu Pembayaran.'
-            ).then(() => router.push('/keuangan/pembayaran'))
-          }
-          className="flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-primary hover:bg-primary-container text-white font-label-md text-label-md font-semibold disabled:opacity-50"
-        >
-          <Icon name="payments" className="text-base text-white" />
-          <span>Buat Pembayaran</span>
-        </button>
-      )}
+      {/* No "Buat Pembayaran" here: APPROVED is the end of VAKASI's
+          workflow. The approved activity is pushed to Sianggar, SDM
+          downloads it there, and the disbursement is raised in Sianggar
+          (FLOW.md section 8). The handoff status is shown in its own
+          card on this page. */}
 
       {showCancel && !showCancelConfirm && (
         <button

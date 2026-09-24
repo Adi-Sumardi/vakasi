@@ -60,7 +60,18 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: 'account_balance_wallet',
     items: [
       { label: 'Anggaran', href: '/keuangan/anggaran', permission: 'reports.view', icon: 'account_balance_wallet' },
-      { label: 'Pembayaran', href: '/keuangan/pembayaran', permission: 'payments.view', icon: 'price_check' },
+      // "Pembayaran" is intentionally absent: VAKASI stops at Kepala
+      // Sekolah approval and the disbursement happens in Sianggar, after
+      // SDM downloads the data from Sianggar (FLOW.md section 8). The
+      // screen and its API stay in the tree but dormant behind
+      // config('vakasi.payment_module').
+    ],
+  },
+  {
+    label: 'Integrasi',
+    icon: 'sync_alt',
+    items: [
+      { label: 'Kirim ke Sianggar', href: '/integrasi/sianggar', permission: 'integration.manage', icon: 'cloud_upload' },
     ],
   },
 ];

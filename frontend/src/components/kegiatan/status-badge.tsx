@@ -11,6 +11,12 @@ const STATUS_MAP: Record<string, { label: string; className: string; dot: string
   paid: { label: 'Dibayar', className: 'bg-primary-fixed text-on-primary-fixed-variant', dot: 'bg-primary' },
   completed: { label: 'Selesai', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', dot: 'bg-tertiary' },
   pending: { label: 'Menunggu', className: 'bg-secondary-container text-on-secondary-container', dot: 'bg-secondary' },
+  cancelled: { label: 'Dibatalkan', className: 'bg-error-container text-on-error-container', dot: 'bg-error' },
+  // Sianggar handoff states (FLOW.md section 8), shown alongside activity
+  // status on the integration screen.
+  sent: { label: 'Terkirim', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', dot: 'bg-tertiary' },
+  failed: { label: 'Gagal Kirim', className: 'bg-error-container text-on-error-container', dot: 'bg-error' },
+  skipped: { label: 'Belum Dikonfigurasi', className: 'bg-surface-container text-on-surface-variant', dot: 'bg-outline' },
 };
 
 export function StatusBadge({ status }: { status: string }) {

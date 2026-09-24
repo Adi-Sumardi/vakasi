@@ -175,7 +175,11 @@ Reject:
 }
 ```
 
-## 8. Payments
+## 8. Payments (DORMAN)
+
+Modul ini non-aktif secara default --- lihat FLOW.md section 7.
+Route hanya terdaftar bila `VAKASI_PAYMENT_MODULE=true`.
+
 
 ``` http
 GET  /payments
@@ -184,7 +188,27 @@ GET  /payments/{id}
 POST /payments/{id}/process
 POST /payments/{id}/evidence
 POST /payments/{id}/complete
+POST /payments/{id}/cancel
 ```
+
+Lifecycle: `POST /payments` memverifikasi dan mencatat pembayaran
+(activity APPROVED → VERIFIED, FR-10). `process` memulai pencairan
+(VERIFIED → PROCESSING, FR-11). `complete` menutupnya setelah bukti
+transfer diunggah (PROCESSING → PAID → activity COMPLETED). `cancel`
+membatalkan pembayaran yang belum cair (VERIFIED/PROCESSING) dan
+mengembalikan kegiatan ke APPROVED; baris pembayaran tetap disimpan
+(BR-04) dengan status `cancelled`.
+
+## 8b. Integrasi SiHaris
+
+``` http
+GET  /integrations/siharis/pending
+POST /integrations/siharis/activities/{activity}/push
+```
+
+`permission:integration.manage` (Super Admin, Admin). Push otomatis
+terjadi saat approval; endpoint ini hanya untuk memulihkan pengiriman
+yang gagal. Lihat FLOW.md section 8.
 
 ## 9. Reports
 

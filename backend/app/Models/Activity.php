@@ -34,6 +34,19 @@ class Activity extends Model
 
     public const COMPLETED = 'completed';
 
+    /**
+     * Handoff state for the Sianggar push (FLOW.md section 8). Separate
+     * from the activity status: APPROVED is terminal for VAKASI whether
+     * or not Sianggar has acknowledged the data yet.
+     */
+    public const SIANGGAR_PENDING = 'pending';
+
+    public const SIANGGAR_SENT = 'sent';
+
+    public const SIANGGAR_FAILED = 'failed';
+
+    public const SIANGGAR_SKIPPED = 'skipped';
+
     protected $fillable = [
         'activity_code',
         'activity_type_id',
@@ -53,6 +66,10 @@ class Activity extends Model
         'created_by',
         'verification_code',
         'approval_document_number',
+        'sianggar_status',
+        'sianggar_synced_at',
+        'sianggar_attempts',
+        'sianggar_last_error',
     ];
 
     protected function casts(): array
@@ -63,6 +80,7 @@ class Activity extends Model
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'completed_at' => 'datetime',
+            'sianggar_synced_at' => 'datetime',
         ];
     }
 

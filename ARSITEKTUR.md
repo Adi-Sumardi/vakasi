@@ -367,16 +367,38 @@ belum ditentukan.
     dan kartu "Bukti Approval" di halaman detail kegiatan. QR yang
     sama juga tercetak di slip honor PDF (`HonorController::slip`).
 
-Pertanyaan terbuka yang masih perlu dijawab sebelum lanjut ke
-integrasi SiHaris/Sianggar:
+**Push ke SiHaris (✅ diimplementasikan):**
+
+-   `ApprovalService::approve()` men-dispatch
+    `PushApprovedActivityToSiHaris` (`ShouldQueue`, `afterCommit`,
+    `tries=5`, backoff 60/300/900/1800 detik).
+-   `SiHarisService` menyusun payload (kegiatan + nomor SK + URL
+    verifikasi + rincian honor per pegawai **termasuk data rekening**,
+    karena Sianggar membayar berdasarkan itu) lalu mem-POST-nya ke
+    `SIHARIS_WEBHOOK_URL`.
+-   Autentikasi: HMAC-SHA256 atas raw body dengan
+    `SIHARIS_WEBHOOK_SECRET`, dikirim sebagai `X-Vakasi-Signature`
+    (skema yang sama dengan webhook fingerprint milik SiHaris).
+    `X-Idempotency-Key` = `activity_code`.
+-   Hasil disimpan di `activities.siharis_status`, `siharis_synced_at`,
+    `siharis_attempts`, `siharis_last_error` dan ditampilkan di UI.
+    Pemulihan manual lewat `/api/v1/integrations/siharis/*`
+    (`permission:integration.manage`).
+-   Bila `SIHARIS_WEBHOOK_URL` kosong, push dilewati
+    (`siharis_status = skipped`) --- lingkungan lokal/test tidak pernah
+    memanggil keluar secara tidak sengaja.
+
+Pertanyaan terbuka yang masih perlu dijawab:
 
 -   Apakah "SendaGo" pada diagram di atas adalah sistem yang sama
     dengan "SiHaris", atau dua sistem berbeda?
--   Bagaimana status Payment VAKASI (VERIFIED → PROCESSING → PAID →
-    COMPLETED, section 8) berhubungan dengan pencairan yang
-    sesungguhnya terjadi di Sianggar --- apakah keduanya independen,
-    atau status PAID VAKASI seharusnya mengikuti konfirmasi dari
-    Sianggar?
+-   **Terjawab:** pencairan terjadi di Sianggar, bukan di VAKASI.
+    Modul Payment VAKASI (section 8) dinonaktifkan di balik
+    `config('vakasi.payment_module')` dan status akhir kegiatan di
+    VAKASI adalah APPROVED. Bila nanti VAKASI diminta mencerminkan
+    status pencairan dari Sianggar, modul itu tinggal diaktifkan
+    kembali sebagai pencatatan lokal hasil sinkron --- bukan sebagai
+    source of truth.
 -   Autentikasi/otorisasi apa yang dipakai SiHaris untuk menarik
     data dari VAKASI (service-to-service token, API key, OAuth)?
 

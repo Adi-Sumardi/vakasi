@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { Icon } from '@/components/ui/icon';
@@ -5,31 +6,42 @@ import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { ActivityActions } from '@/components/kegiatan/activity-actions';
 import { ActivityDocuments } from '@/components/kegiatan/activity-documents';
 import { EditActivityDialog } from '@/components/kegiatan/edit-activity-dialog';
+import { RecalculateHonorDialog } from '@/components/kegiatan/recalculate-honor-dialog';
+import { SianggarHandoffCard } from '@/components/kegiatan/sianggar-handoff-card';
 import { getActivityServer } from '@/lib/api/activities.server';
 import { meServer } from '@/lib/api/auth.server';
 import { hasPermission } from '@/lib/api/auth';
-import { listActivityTypes, listFundSources, listUnits } from '@/lib/api/master-data.server';
+import { activeOnly, activeOrCurrent } from '@/lib/api/master-data';
+import { listActivityTypes, listFundSources, listHonorTypes, listUnits } from '@/lib/api/master-data.server';
 import { formatRupiah } from '@/lib/format';
 
 export default async function ActivityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [activity, user, activityTypes, units, fundSources] = await Promise.all([
+  const [activity, user, activityTypes, units, fundSources, honorTypes] = await Promise.all([
     getActivityServer(Number(id)),
     meServer(),
     listActivityTypes(),
     listUnits(),
     listFundSources(),
+    listHonorTypes(),
   ]);
 
   const isOwner = activity.creator?.id === user.id;
   const canSubmit = hasPermission(user, 'activities.submit');
   const canApprove = hasPermission(user, 'activities.approve');
-  const canProcessPayment = hasPermission(user, 'payments.process');
+  const canManageIntegration = hasPermission(user, 'integration.manage');
   const canManage = hasPermission(user, 'activities.update');
   const canEditInfo =
     canManage && (isOwner || user.role?.name === 'admin' || user.role?.name === 'super_admin') &&
     ['draft', 'rejected'].includes(activity.status);
   const canUploadDocument = canEditInfo;
+  // Honor may only be (re)calculated while the activity is still editable —
+  // once approved it is a financial snapshot (BR-03). Keuangan holds the
+  // permission too, without owning the activity.
+  const canRecalculateHonor =
+    hasPermission(user, 'honors.calculate') &&
+    ['draft', 'rejected'].includes(activity.status) &&
+    (isOwner || ['admin', 'super_admin', 'keuangan'].includes(user.role?.name ?? ''));
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
@@ -57,7 +69,12 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             <div className="flex items-center justify-between mb-space-md">
               <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Informasi Kegiatan</h2>
               {canEditInfo && (
-                <EditActivityDialog activity={activity} activityTypes={activityTypes} units={units} fundSources={fundSources} />
+                <EditActivityDialog
+                  activity={activity}
+                  activityTypes={activeOrCurrent(activityTypes, activity.activity_type.id)}
+                  units={activeOrCurrent(units, activity.unit.id)}
+                  fundSources={activeOrCurrent(fundSources, activity.fund_source.id)}
+                />
               )}
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm font-body-sm text-body-sm">
@@ -80,9 +97,12 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
           </div>
 
           <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
-            <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold p-space-lg pb-0">
-              Peserta &amp; Honor ({activity.members?.length ?? 0})
-            </h2>
+            <div className="flex items-center justify-between gap-space-sm p-space-lg pb-0">
+              <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Peserta &amp; Honor ({activity.members?.length ?? 0})
+              </h2>
+              {canRecalculateHonor && <RecalculateHonorDialog activity={activity} honorTypes={activeOnly(honorTypes)} />}
+            </div>
             {(activity.honor_details?.length ?? 0) === 0 ? (
               <p className="p-space-lg font-body-sm text-body-sm text-on-surface-variant">Belum ada honor dihitung.</p>
             ) : (
@@ -164,6 +184,8 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
+          <SianggarHandoffCard activity={activity} canRetry={canManageIntegration} />
+
           {activity.verification_code && (
             <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs border border-outline-variant/30 flex flex-col items-center text-center gap-space-sm">
               <div className="self-start">
@@ -172,9 +194,15 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                   <p className="font-body-sm text-body-sm text-on-surface-variant font-mono">{activity.approval_document_number}</p>
                 )}
               </div>
-              <img
+              {/* unoptimized: the QR is generated per request by the API
+                  and is already a small PNG — running it through the
+                  image optimizer would only add a hop. */}
+              <Image
                 src={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/verify/${activity.verification_code}/qrcode`}
                 alt="QR Code bukti approval"
+                width={128}
+                height={128}
+                unoptimized
                 className="w-32 h-32"
               />
               <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -196,7 +224,6 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             isOwner={isOwner}
             canSubmit={canSubmit}
             canApprove={canApprove}
-            canProcessPayment={canProcessPayment}
             canManage={canManage}
           />
         </div>

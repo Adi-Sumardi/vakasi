@@ -18,12 +18,22 @@ use App\Http\Controllers\Api\V1\PositionController;
 use App\Http\Controllers\Api\V1\PublicVerificationController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SearchController;
+use App\Http\Controllers\Api\V1\SianggarCallbackController;
+use App\Http\Controllers\Api\V1\SianggarController;
 use App\Http\Controllers\Api\V1\UnitController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+    // PRD.md FR-01 reset flow. Public by necessity, so rate limited:
+    // these endpoints take an email address from an unauthenticated
+    // caller.
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    });
 
     // Public, unauthenticated — see FLOW.md section 8 / ARSITEKTUR.md
     // section 11.1. `{code}` is an opaque unguessable token, never the
@@ -34,7 +44,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/public/verify/{code}/qrcode', [PublicVerificationController::class, 'qrcode']);
     });
 
-    Route::middleware('auth:sanctum')->group(function () {
+    // Sianggar melaporkan kemajuan pencairan ke sini. Di luar
+    // auth:sanctum karena pemanggilnya server, bukan pengguna VAKASI —
+    // autentikasinya HMAC atas raw body (X-Sianggar-Signature).
+    Route::post('/integrations/sianggar/callback', SianggarCallbackController::class)
+        ->middleware('throttle:120,1')
+        ->name('integrations.sianggar.callback');
+
+    Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::patch('/auth/password', [AuthController::class, 'changePassword']);
@@ -96,10 +113,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/activities/{activity}', [ActivityController::class, 'destroy']);
             Route::post('/activities/{activity}/cancel', [ActivityController::class, 'cancel']);
             Route::post('/activities/{activity}/members', [ActivityMemberController::class, 'store']);
-            Route::put('/activities/{activity}/members/{member}', [ActivityMemberController::class, 'update']);
-            Route::delete('/activities/{activity}/members/{member}', [ActivityMemberController::class, 'destroy']);
-            Route::post('/activities/{activity}/documents', [DocumentController::class, 'store']);
+            // scopeBindings(): resolve {member} through $activity->members(),
+            // not globally by id. Without it, authorizing against {activity}
+            // while acting on a {member} that belongs to a *different*
+            // activity is an IDOR (AI_CODING_RULES.md section 6: never trust
+            // an id from the request just because the user is logged in).
+            Route::put('/activities/{activity}/members/{member}', [ActivityMemberController::class, 'update'])->scopeBindings();
+            Route::delete('/activities/{activity}/members/{member}', [ActivityMemberController::class, 'destroy'])->scopeBindings();
         });
+        // Documents Manage is its own row in ROLE_PERMISSION.md section 3
+        // (Keuangan has it, and they cannot update activities) — gating
+        // uploads on activities.update left that permission unused.
+        Route::middleware('permission:documents.manage')
+            ->post('/activities/{activity}/documents', [DocumentController::class, 'store']);
         Route::middleware('permission:honors.calculate')
             ->post('/activities/{activity}/calculate-honor', [HonorController::class, 'calculate']);
         Route::middleware('permission:activities.submit')
@@ -108,6 +134,13 @@ Route::prefix('v1')->group(function () {
         Route::middleware('permission:documents.view')->get('/documents', [DocumentController::class, 'all']);
         Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
 
+        // Handoff to Sianggar (FLOW.md section 8). The push is automatic on
+        // approval; these endpoints only cover recovering a failed one.
+        Route::middleware('permission:integration.manage')->group(function () {
+            Route::get('/integrations/sianggar/pending', [SianggarController::class, 'pending']);
+            Route::post('/integrations/sianggar/activities/{activity}/push', [SianggarController::class, 'push']);
+        });
+
         // Approval
         Route::middleware('permission:activities.approve')->group(function () {
             Route::get('/approvals', [ApprovalController::class, 'index']);
@@ -115,17 +148,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/activities/{activity}/reject', [ApprovalController::class, 'reject']);
         });
 
-        // Payments
-        Route::middleware('permission:payments.view')->group(function () {
-            Route::get('/payments', [PaymentController::class, 'index']);
-            Route::get('/payments/{payment}', [PaymentController::class, 'show']);
-        });
-        Route::middleware('permission:payments.process')->group(function () {
-            Route::post('/payments', [PaymentController::class, 'store']);
-            Route::post('/payments/{payment}/process', [PaymentController::class, 'process']);
-            Route::post('/payments/{payment}/evidence', [PaymentController::class, 'evidence']);
-            Route::post('/payments/{payment}/complete', [PaymentController::class, 'complete']);
-        });
+        // Payments — dormant. VAKASI stops at Kepala Sekolah approval;
+        // disbursement happens in Sianggar (FLOW.md section 8). These
+        // routes only exist when config('vakasi.payment_module') is on.
+        if (config('vakasi.payment_module')) {
+            Route::middleware('permission:payments.view')->group(function () {
+                Route::get('/payments', [PaymentController::class, 'index']);
+                Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+            });
+            Route::middleware('permission:payments.process')->group(function () {
+                Route::post('/payments', [PaymentController::class, 'store']);
+                Route::post('/payments/{payment}/process', [PaymentController::class, 'process']);
+                Route::post('/payments/{payment}/evidence', [PaymentController::class, 'evidence']);
+                Route::post('/payments/{payment}/complete', [PaymentController::class, 'complete']);
+                Route::post('/payments/{payment}/cancel', [PaymentController::class, 'cancel']);
+            });
+        }
 
         // Reports
         Route::middleware('permission:reports.view')->group(function () {
@@ -133,7 +171,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/reports/honors', [ReportController::class, 'honors']);
             Route::get('/reports/employees/{employee}/honors', [ReportController::class, 'employeeHonors']);
             Route::get('/reports/budget', [ReportController::class, 'budget']);
-            Route::get('/reports/payments', [ReportController::class, 'payments']);
+
+            if (config('vakasi.payment_module')) {
+                Route::get('/reports/payments', [ReportController::class, 'payments']);
+            }
         });
 
         // Audit

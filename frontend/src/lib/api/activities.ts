@@ -77,6 +77,19 @@ export const ACTIVITY_STATUSES = [
 
 export type ActivityStatus = (typeof ACTIVITY_STATUSES)[number];
 
+/**
+ * VAKASI's workflow ends at `approved`; everything after it happens in
+ * Sianggar and Sianggar. This tracks whether the handoff got through.
+ */
+export type SianggarStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+export const SIANGGAR_STATUS_LABEL: Record<SianggarStatus, string> = {
+  pending: 'Menunggu dikirim',
+  sent: 'Terkirim ke Sianggar',
+  failed: 'Gagal dikirim',
+  skipped: 'Integrasi belum dikonfigurasi',
+};
+
 export type Activity = {
   id: number;
   activity_code: string;
@@ -96,6 +109,10 @@ export type Activity = {
   completed_at: string | null;
   verification_code: string | null;
   approval_document_number: string | null;
+  /** Handoff to Sianggar after approval — see FLOW.md section 8. */
+  sianggar_status: SianggarStatus | null;
+  sianggar_synced_at: string | null;
+  sianggar_last_error: string | null;
   creator?: { id: number; name: string };
   budget?: Budget;
   members?: ActivityMember[];
@@ -162,6 +179,13 @@ export type CalculateHonorItem = {
   tax_amount?: number;
   deduction_amount?: number;
 };
+
+/** Re-sends an approved activity to Sianggar after a failed handoff. */
+export function pushActivityToSianggar(activityId: number): Promise<Activity> {
+  return apiFetch<Activity>(`/api/v1/integrations/sianggar/activities/${activityId}/push`, {
+    method: 'POST',
+  });
+}
 
 export function calculateHonor(
   activityId: number,

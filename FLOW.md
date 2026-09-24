@@ -129,25 +129,38 @@ Net Honor
 -   Approval dicatat sebagai immutable log.
 -   Perubahan setelah approval harus melalui revision/adjustment.
 
-## 7. Payment Flow
+## 7. Payment Flow (DORMAN --- tidak dipakai)
+
+> **Lingkup VAKASI berhenti di approval Kepala Sekolah.** Pencairan
+> sesungguhnya terjadi di Sianggar setelah SDM mengunduh data dari menu
+> "Vakasi" di SiHaris (section 8). Modul Payment di bawah ini tetap ada
+> di kode tapi non-aktif di balik `config('vakasi.payment_module')`
+> (default `false`), disiapkan seandainya VAKASI nanti diminta mencatat
+> ulang status pencairan hasil sinkron dari Sianggar. Status akhir
+> kegiatan di VAKASI adalah **APPROVED**.
 
 ``` text
 APPROVED
    ↓
-Finance Verification
-   ↓
-Create Payment
+Finance Verification  (POST /payments)      → activity VERIFIED
    ↓
 Payment Details
    ↓
-Process
+Process               (POST .../process)    → activity PROCESSING
    ↓
-Upload Evidence
+Upload Evidence       (POST .../evidence)
    ↓
-PAID
+Complete              (POST .../complete)   → PAID → COMPLETED
    ↓
 Slip + Report
 ```
+
+Verifikasi dan pencairan adalah dua langkah terpisah: setelah
+`POST /payments` belum ada uang yang berpindah, sehingga Keuangan masih
+dapat memeriksa nominal dan penerima. Selama pembayaran belum PAID,
+`POST /payments/{id}/cancel` (wajib menyertakan alasan) mengembalikan
+kegiatan ke APPROVED dan menandai pembayaran `cancelled` --- baris
+pembayaran tidak pernah dihapus (BR-04).
 
 ## 8. Downstream Integration Flow (SiHaris & Sianggar)
 
@@ -194,24 +207,30 @@ Detail per langkah:
 2.  **Menu "Vakasi" di SiHaris** --- data kegiatan yang sudah
     disetujui (dan idealnya sudah lengkap: honor detail, dokumen,
     QR code) harus "otomatis muncul" di sebuah menu bernama "Vakasi"
-    di dalam aplikasi SiHaris. Ini butuh salah satu dari: (a) VAKASI
-    mengekspos API baru yang dipanggil/di-poll SiHaris, (b) VAKASI
-    mem-push data ke SiHaris saat approval terjadi (webhook), atau
-    (c) mekanisme lain yang disepakati tim SiHaris. **Belum
-    ditentukan** --- lihat section 11 ARSITEKTUR.md.
+    di dalam aplikasi SiHaris. **Sudah diputuskan: webhook push.**
+    `ApprovalService::approve()` men-dispatch
+    `PushApprovedActivityToSiHaris` (queued, `afterCommit`) yang
+    mengirim payload ke `SIHARIS_WEBHOOK_URL`. Body ditandatangani
+    HMAC-SHA256 dengan `SIHARIS_WEBHOOK_SECRET` dan dikirim sebagai
+    header `X-Vakasi-Signature` --- skema yang sama dengan webhook
+    mesin fingerprint milik SiHaris. `X-Idempotency-Key` berisi
+    `activity_code` agar pengiriman ulang tidak membuat entri ganda.
+
+    Hasil pengiriman dicatat di kolom `activities.siharis_status`
+    (`pending`/`sent`/`failed`/`skipped`), `siharis_synced_at`,
+    `siharis_attempts`, dan `siharis_last_error`, ditampilkan di kartu
+    "Pengiriman ke SiHaris" pada halaman detail kegiatan. Pengiriman
+    yang gagal dapat diulang lewat menu Integrasi → Kirim ke SiHaris
+    (`permission:integration.manage`). Job mencoba 5 kali dengan
+    backoff 1/5/15/30 menit; kegagalan tidak pernah membatalkan
+    approval yang sudah tercatat.
 3.  **Unduh oleh SDM** --- staf SDM (HR), bukan role yang dikenal di
     ROLE_PERMISSION.md saat ini, mengunduh data dari SiHaris untuk
     diajukan ke Sianggar.
-4.  **Pencairan dana via Sianggar** --- pertanyaan terbuka: apakah
-    alur Payment VAKASI sendiri (VERIFIED → PROCESSING → PAID →
-    COMPLETED, section 7) berjalan *paralel/independen* dari
-    pencairan di Sianggar, atau apakah pencairan sesungguhnya
-    terjadi di Sianggar dan status PAID di VAKASI seharusnya
-    mengikuti konfirmasi dari Sianggar (bukan diinput manual oleh
-    Keuangan seperti sekarang)? Ini menentukan apakah
-    `PaymentService` VAKASI saat ini sudah benar sebagai
-    "source of truth" pencairan, atau perlu disesuaikan agar
-    menjadi pencatatan lokal yang disinkronkan dari Sianggar.
+4.  **Pencairan dana via Sianggar** --- **sudah diputuskan**:
+    pencairan sesungguhnya terjadi di Sianggar, bukan di VAKASI.
+    Modul Payment VAKASI karena itu dinonaktifkan (section 7) dan
+    status akhir kegiatan di VAKASI adalah APPROVED.
 
 Catatan: ARSITEKTUR.md section 11 sudah menyebut integrasi masa
 depan dengan "SendaGo" (HR/Core) --- belum jelas apakah SendaGo dan
@@ -225,6 +244,8 @@ perlu konfirmasi sebelum desain integrasi dimulai.
 -   Anggaran tidak cukup → warning atau hard block sesuai policy.
 -   Duplikasi penugasan → ditolak.
 -   Bukti pembayaran tidak valid → payment tetap PROCESSING.
+-   Pembayaran perlu dibatalkan sebelum cair → `cancel` dengan alasan;
+    kegiatan kembali ke APPROVED, pembayaran menjadi CANCELLED.
 -   Pembayaran gagal → status PAYMENT_FAILED dan dapat diproses ulang
     dengan audit trail.
 

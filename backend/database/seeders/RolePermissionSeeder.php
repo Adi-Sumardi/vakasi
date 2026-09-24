@@ -58,6 +58,10 @@ class RolePermissionSeeder extends Seeder
         'documents.view' => ['documents', 'view', ['super_admin', 'admin', 'tu', 'kepala_sekolah', 'keuangan', 'guru_tendik', 'auditor']],
         'documents.manage' => ['documents', 'manage', ['super_admin', 'admin', 'tu', 'keuangan']],
 
+        // Handoff ke Sianggar (FLOW.md section 8) — hanya pengiriman ulang
+        // saat push otomatis gagal, jadi cukup Super Admin/Admin.
+        'integration.manage' => ['integration', 'manage', ['super_admin', 'admin']],
+
         'audit.view' => ['audit', 'view', ['super_admin', 'admin', 'kepala_sekolah', 'keuangan', 'auditor']],
 
         'users.manage' => ['users', 'manage', ['super_admin', 'admin']],

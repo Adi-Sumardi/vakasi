@@ -30,6 +30,11 @@ class ActivityResource extends JsonResource
             'approved_at' => $this->approved_at,
             'completed_at' => $this->completed_at,
             'verification_code' => $this->verification_code,
+            // Handoff to Sianggar (FLOW.md section 8) — surfaced so a
+            // failed push is visible instead of only sitting in the log.
+            'sianggar_status' => $this->sianggar_status,
+            'sianggar_synced_at' => $this->sianggar_synced_at,
+            'sianggar_last_error' => $this->sianggar_last_error,
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,

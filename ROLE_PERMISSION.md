@@ -87,7 +87,21 @@ reports.view
   Audit View            ✓         ✓        \-         ✓          ✓         \-         ✓
 
   User Manage           ✓         ✓        \-        \-         \-         \-        \-
+
+  Integration           ✓         ✓        \-        \-         \-         \-        \-
+  Manage                                                                      
   -------------------------------------------------------------------------------------
+
+Catatan:
+
+-   **Integration Manage** (`integration.manage`) --- mengirim ulang
+    kegiatan yang gagal di-push ke SiHaris (FLOW.md section 8). Push
+    normal terjadi otomatis saat approval, jadi permission ini murni
+    untuk pemulihan.
+-   **Payment View / Payment Process** --- tetap ada di matriks ini,
+    tetapi modul Payment VAKASI berstatus dorman: pencairan terjadi di
+    Sianggar, bukan di VAKASI (FLOW.md section 7). Route `/payments/*`
+    hanya aktif bila `VAKASI_PAYMENT_MODULE=true`.
 
 ## 4. Data Scope
 
