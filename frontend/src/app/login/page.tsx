@@ -22,11 +22,21 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/**
+ * Alur nyata sistem ini, bukan basa-basi pemasaran. Langkah terakhir
+ * berhenti di penerusan ke Sianggar: pencairan tidak terjadi di VAKASI
+ * (FLOW.md section 8), jadi menjanjikannya di sini akan menyesatkan.
+ */
 const WORKFLOW_STEPS = [
-  { icon: "event_available", label: "Kegiatan", desc: "TU membuat pengajuan kegiatan" },
-  { icon: "payments", label: "Honor", desc: "Sistem hitung honor otomatis" },
-  { icon: "verified", label: "Approval", desc: "Kepala Sekolah menyetujui" },
-  { icon: "account_balance_wallet", label: "Pembayaran", desc: "Keuangan mencairkan dana" },
+  { icon: "event_available", label: "Kegiatan", desc: "TU mengajukan kegiatan dan pesertanya" },
+  { icon: "calculate", label: "Honor", desc: "Nominal dihitung otomatis dari master tarif" },
+  { icon: "verified", label: "Approval", desc: "Kepala Sekolah menyetujui dan menerbitkan SK" },
+  { icon: "cloud_upload", label: "Pencairan", desc: "Diteruskan ke Sianggar untuk dibayarkan" },
+];
+
+const TRUST_POINTS = [
+  { icon: "qr_code", label: "QR verifikasi publik di tiap SK" },
+  { icon: "shield_check", label: "Jejak audit untuk setiap perubahan" },
 ];
 
 export default function LoginPage() {
@@ -56,156 +66,202 @@ export default function LoginPage() {
     }
   }
 
+  const submitting = form.formState.isSubmitting;
+
   return (
-    <div className="bg-surface min-h-screen flex items-center justify-center p-space-base sm:p-space-xl antialiased">
-      <main className="w-full max-w-4xl bg-surface-container-lowest rounded-3xl shadow-[0_20px_25px_-5px_rgba(15,23,42,0.1)] border border-outline-variant/30 overflow-hidden flex flex-col md:flex-row">
-        {/* Left: form */}
-        <div className="w-full md:w-[55%] p-space-xl sm:p-space-2xl flex flex-col justify-center gap-space-lg">
-          <div className="flex items-center gap-space-sm">
-            <Image
-              alt="Logo VAKASI"
-              src="/logo.png"
-              width={40}
-              height={40}
-              priority
-              className="h-10 w-10 rounded-xl object-contain bg-surface-container-low p-1"
-            />
-            <div className="flex flex-col">
-              <span className="font-headline-sm text-headline-sm text-primary font-bold leading-tight">
-                VAKASI
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-                Sistem Manajemen Honorarium Kegiatan
-              </span>
-            </div>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-surface p-space-base sm:p-space-xl antialiased">
+      {/* Cahaya latar: memberi kedalaman pada halaman tanpa menambah
+          gambar yang harus diunduh. aria-hidden karena murni dekoratif. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-48 -right-24 h-[32rem] w-[32rem] rounded-full bg-secondary-container/50 blur-3xl" />
+      </div>
+
+      <main className="relative w-full max-w-5xl rounded-3xl bg-surface-container-lowest shadow-[0_30px_60px_-20px_rgba(11,28,48,0.28)] ring-1 ring-outline-variant/30 overflow-hidden flex flex-col md:flex-row animate-in fade-in zoom-in-95 duration-500">
+        {/* ---------- Panel merek ---------- */}
+        <aside className="relative order-first md:order-last md:w-[46%] overflow-hidden bg-linear-to-br from-[#000a4d] via-primary to-primary-container text-white">
+          {/* Cincin konsentris di belakang lambang — memberi titik fokus
+              visual tanpa aset grafis tambahan. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full border border-white/10" />
+            <div className="absolute -top-10 -right-6 h-48 w-48 rounded-full border border-white/10" />
+            <div className="absolute -bottom-28 -left-16 h-64 w-64 rounded-full bg-white/5 blur-2xl" />
           </div>
 
+          <div className="relative flex h-full flex-col justify-between gap-space-xl p-space-lg sm:p-space-xl md:p-space-2xl">
+            <div className="flex flex-col gap-space-md">
+              <div className="flex items-center gap-space-sm">
+                <Image
+                  alt="Logo YAPI"
+                  src="/logo.png"
+                  width={44}
+                  height={44}
+                  priority
+                  className="h-11 w-11 rounded-xl bg-white/95 object-contain p-1 shadow-sm"
+                />
+                <div className="flex flex-col leading-tight">
+                  <span className="font-headline-sm text-headline-sm font-bold">VAKASI</span>
+                  <span className="font-label-sm text-label-sm uppercase tracking-wider text-white/70">
+                    Yayasan Asrama Pelajar Islam
+                  </span>
+                </div>
+              </div>
+
+              {/* Judul panel hanya tampil di desktop: di mobile panel ini
+                  berada di atas form, jadi apa pun yang ditambahkan di sini
+                  mendorong kolom login keluar layar. */}
+              <h2 className="hidden md:block font-headline-md text-headline-md font-bold leading-snug">
+                Satu alur, dari kegiatan sampai honor cair.
+              </h2>
+            </div>
+
+            {/* Timeline alur */}
+            <ol className="hidden md:flex flex-col gap-space-md">
+              {WORKFLOW_STEPS.map((step, idx) => (
+                <li
+                  key={step.label}
+                  className="relative flex items-start gap-space-md animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards"
+                  style={{ animationDelay: `${200 + idx * 90}ms`, animationDuration: "500ms" }}
+                >
+                  {idx < WORKFLOW_STEPS.length - 1 && (
+                    <span aria-hidden className="absolute left-5 top-11 h-7 w-px bg-white/25" />
+                  )}
+                  <span className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
+                    <Icon name={step.icon} className="text-[18px] text-white" />
+                  </span>
+                  <span className="flex flex-col pt-0.5">
+                    <span className="font-label-lg text-label-lg font-semibold">{step.label}</span>
+                    <span className="font-body-sm text-body-sm text-white/70">{step.desc}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <ul className="hidden md:flex flex-col gap-space-xs border-t border-white/15 pt-space-md">
+              {TRUST_POINTS.map((point) => (
+                <li key={point.label} className="flex items-center gap-space-sm font-body-sm text-body-sm text-white/75">
+                  <Icon name={point.icon} className="text-[16px] text-white/90" />
+                  <span>{point.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+
+        {/* ---------- Panel form ---------- */}
+        <div className="flex w-full flex-col justify-center gap-space-lg p-space-xl sm:p-space-2xl md:w-[54%]">
           <div className="flex flex-col gap-space-2xs">
-            <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">
+            <span className="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary">
+              Masuk ke akun Anda
+            </span>
+            <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface">
               Selamat datang kembali
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Masuk untuk mengelola kegiatan dan honorarium sekolah Anda.
+              Kelola kegiatan dan honorarium sekolah dalam satu tempat.
             </p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-space-md" noValidate>
             <div>
               <label
-                className="font-label-md text-label-md text-on-surface font-semibold block mb-space-2xs"
+                className="mb-space-2xs block font-label-md text-label-md font-semibold text-on-surface"
                 htmlFor="email-input"
               >
                 Email
               </label>
-              <div className="relative">
+              <div className="group relative">
                 <Icon
                   name="person"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]"
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline transition-colors group-focus-within:text-primary"
                 />
                 <input
                   id="email-input"
                   type="email"
                   autoComplete="username"
-                  placeholder="admin@sekolah.sch.id"
-                  disabled={form.formState.isSubmitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:border-primary focus:bg-surface-container-lowest transition-colors"
+                  placeholder="nama@sekolah.sch.id"
+                  disabled={submitting}
+                  aria-invalid={Boolean(form.formState.errors.email)}
+                  className="h-12 w-full rounded-xl border border-outline-variant/50 bg-surface-container-low pl-11 pr-3.5 font-body-md text-body-md text-on-surface transition-all placeholder:text-outline focus:border-primary focus:bg-surface-container-lowest focus:outline-none focus:ring-4 focus:ring-primary/15 aria-[invalid=true]:border-error"
                   {...form.register("email")}
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="font-body-sm text-body-sm text-error mt-space-2xs">
+                <p className="mt-space-2xs font-body-sm text-body-sm text-error">
                   {form.formState.errors.email.message}
                 </p>
               )}
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-space-2xs">
-                <label className="font-label-md text-label-md text-on-surface font-semibold" htmlFor="pwd-input">
+              <div className="mb-space-2xs flex items-center justify-between">
+                <label className="font-label-md text-label-md font-semibold text-on-surface" htmlFor="pwd-input">
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="font-label-sm text-label-sm text-primary hover:underline font-semibold"
+                  className="font-label-sm text-label-sm font-semibold text-primary hover:underline"
                 >
                   Lupa password?
                 </Link>
               </div>
-              <div className="relative">
+              <div className="group relative">
                 <Icon
                   name="lock"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]"
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline transition-colors group-focus-within:text-primary"
                 />
                 <input
                   id="pwd-input"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  disabled={form.formState.isSubmitting}
-                  className="w-full h-12 pl-10 pr-10 rounded-xl bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:border-primary focus:bg-surface-container-lowest transition-colors"
+                  disabled={submitting}
+                  aria-invalid={Boolean(form.formState.errors.password)}
+                  className="h-12 w-full rounded-xl border border-outline-variant/50 bg-surface-container-low pl-11 pr-11 font-body-md text-body-md text-on-surface transition-all placeholder:text-outline focus:border-primary focus:bg-surface-container-lowest focus:outline-none focus:ring-4 focus:ring-primary/15 aria-[invalid=true]:border-error"
                   {...form.register("password")}
                 />
                 <button
                   type="button"
-                  aria-label="Tampilkan atau sembunyikan password"
+                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors focus:outline-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md text-outline transition-colors hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <Icon name={showPassword ? "visibility" : "visibility_off"} className="text-[20px]" />
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p className="font-body-sm text-body-sm text-error mt-space-2xs">
+                <p className="mt-space-2xs font-body-sm text-body-sm text-error">
                   {form.formState.errors.password.message}
                 </p>
               )}
             </div>
 
             {formError && (
-              <div className="p-3 rounded-xl bg-error-container text-on-error-container text-sm font-medium flex items-center gap-2">
-                <Icon name="error" className="text-error text-lg" />
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-xl bg-error-container p-3 text-sm font-medium text-on-error-container animate-in fade-in slide-in-from-top-1"
+              >
+                <Icon name="error" className="mt-px text-lg text-error" />
                 <span>{formError}</span>
               </div>
             )}
 
             <button
               type="submit"
-              disabled={form.formState.isSubmitting}
-              className="w-full h-12 mt-space-xs rounded-xl bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs shadow-xs transition-colors active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+              disabled={submitting}
+              className="group mt-space-xs flex h-12 w-full cursor-pointer items-center justify-center gap-space-xs rounded-xl bg-linear-to-r from-primary to-primary-container font-label-lg text-label-lg font-bold text-white shadow-[0_8px_20px_-8px_var(--primary)] transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <span>{form.formState.isSubmitting ? "Memproses..." : "Login"}</span>
-              <Icon name="arrow_forward" className="text-[20px] text-white" />
+              <span>{submitting ? "Memproses…" : "Masuk"}</span>
+              <Icon
+                name="arrow_forward"
+                className="text-[20px] text-white transition-transform group-hover:translate-x-0.5"
+              />
             </button>
           </form>
-        </div>
 
-        {/* Right: illustration */}
-        <div className="hidden md:flex md:w-[45%] bg-linear-to-br from-secondary-container/40 to-surface-container-lowest p-space-2xl flex-col items-center justify-center gap-space-xl">
-          <div className="text-center flex flex-col gap-space-xs">
-            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
-              Honorarium &amp; Kegiatan Sekolah
-            </h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
-              Satu alur terpadu dari pengajuan kegiatan sampai pencairan honor, transparan dan mudah diaudit.
-            </p>
-          </div>
-
-          <div className="w-full max-w-xs bg-surface-container-lowest rounded-2xl shadow-md p-space-lg flex flex-col gap-space-md">
-            {WORKFLOW_STEPS.map((step, idx) => (
-              <div key={step.label} className="flex items-start gap-space-md relative">
-                {idx < WORKFLOW_STEPS.length - 1 && (
-                  <span className="absolute left-4.75 top-10 w-px h-8 bg-outline-variant/50" />
-                )}
-                <div className="w-10 h-10 rounded-full bg-primary-fixed text-primary flex items-center justify-center shrink-0 z-10">
-                  <Icon name={step.icon} className="text-[20px]" />
-                </div>
-                <div className="flex flex-col pt-1.5">
-                  <span className="font-label-lg text-label-lg font-bold text-on-surface">{step.label}</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">{step.desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Belum punya akses? Hubungi Tata Usaha atau administrator sekolah Anda.
+          </p>
         </div>
       </main>
     </div>
