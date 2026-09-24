@@ -42,6 +42,36 @@ class ActivityPolicy
         return $this->update($user, $activity);
     }
 
+    /**
+     * ROLE_PERMISSION.md grants Honor Calculation to Keuangan as well as
+     * Admin/TU, but update() is ownership-based, so authorizing the
+     * calculation against it made Keuangan's permission unusable — every
+     * call 403'd. The activity must still be editable: an approved honor
+     * is a financial snapshot (BR-03).
+     */
+    public function calculateHonor(User $user, Activity $activity): bool
+    {
+        if (! in_array($activity->status, [Activity::DRAFT, Activity::REJECTED], true)) {
+            return false;
+        }
+
+        return $user->hasRole('super_admin', 'admin', 'keuangan') || $activity->created_by === $user->id;
+    }
+
+    /**
+     * Keuangan attaches supporting documents after approval, when the
+     * activity is no longer editable by the TU who created it — so this
+     * cannot simply defer to update().
+     */
+    public function uploadDocument(User $user, Activity $activity): bool
+    {
+        if ($user->hasRole('super_admin', 'admin', 'keuangan')) {
+            return true;
+        }
+
+        return $this->update($user, $activity);
+    }
+
     public function approve(User $user, Activity $activity): bool
     {
         return $activity->status === Activity::SUBMITTED && $activity->created_by !== $user->id;

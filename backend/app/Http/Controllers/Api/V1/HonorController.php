@@ -12,6 +12,7 @@ use App\Services\HonorCalculationService;
 use App\Services\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class HonorController extends Controller
@@ -25,7 +26,7 @@ class HonorController extends Controller
 
     public function calculate(CalculateHonorRequest $request, Activity $activity): JsonResponse
     {
-        $this->authorize('update', $activity);
+        $this->authorize('calculateHonor', $activity);
 
         $result = $this->honorCalculationService->generateForActivity($activity, $request->validated('items'));
 
@@ -54,9 +55,18 @@ class HonorController extends Controller
      * since a single Payment already bundles all employees/lines for
      * an activity together (see PaymentService::create).
      */
-    public function slip(Activity $activity, Employee $employee): Response
+    public function slip(Request $request, Activity $activity, Employee $employee): Response
     {
         $this->authorize('view', $activity);
+
+        // ActivityPolicy::view() passes for *any* member of the activity,
+        // so without this a teacher could pull a colleague's slip — and
+        // with it their honor amount — just by changing {employee}.
+        $user = $request->user();
+
+        if ($user->hasRole('guru_tendik') && $user->employee_id !== $employee->id) {
+            abort(403, 'Anda hanya dapat mengunduh slip honor Anda sendiri.');
+        }
 
         $details = $activity->honorDetails()
             ->where('employee_id', $employee->id)
@@ -79,7 +89,7 @@ class HonorController extends Controller
             // prints without a QR rather than erroring.
             'qrCodeDataUri' => $activity->verification_code
                 ? $this->qrCodeService->generate(
-                    rtrim(config('cors.allowed_origins')[0] ?? '', '/')."/verify/{$activity->verification_code}"
+                    $this->qrCodeService->verificationUrl($activity->verification_code)
                 )->getDataUri()
                 : null,
         ]);
