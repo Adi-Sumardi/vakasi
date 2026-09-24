@@ -37,7 +37,7 @@ class DocumentController extends Controller
                 }),
             )
             ->latest('created_at')
-            ->get();
+            ->paginate(20);
 
         return $this->success(DocumentResource::collection($documents));
     }
@@ -51,7 +51,7 @@ class DocumentController extends Controller
 
     public function store(StoreDocumentRequest $request, Activity $activity): JsonResponse
     {
-        $this->authorize('update', $activity);
+        $this->authorize('uploadDocument', $activity);
 
         $document = $this->documentService->store(
             $request->file('file'),

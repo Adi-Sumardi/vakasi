@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Jobs\PushApprovedActivityToSianggar;
 use App\Models\Activity;
 use App\Models\Approval;
 use App\Models\User;
+use App\Services\Concerns\RetriesUniqueNumber;
 use App\Services\Exceptions\BusinessValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,6 +19,8 @@ use Illuminate\Support\Str;
  */
 class ApprovalService
 {
+    use RetriesUniqueNumber;
+
     public function __construct(
         private readonly AuditService $auditService,
         private readonly NotificationService $notificationService,
@@ -65,7 +69,7 @@ class ApprovalService
     {
         $this->ensurePendingApprovalBy($activity, $approver);
 
-        return DB::transaction(function () use ($activity, $approver, $notes) {
+        return $this->retryingUniqueNumber('approval_document_number', fn () => DB::transaction(function () use ($activity, $approver, $notes) {
             $approval = $this->pendingApproval($activity);
 
             $approval->update(['status' => Approval::APPROVED, 'decision_at' => now(), 'notes' => $notes]);
@@ -83,6 +87,7 @@ class ApprovalService
                 'approved_at' => now(),
                 'verification_code' => $activity->verification_code ?? $this->generateVerificationCode(),
                 'approval_document_number' => $activity->approval_document_number ?? $this->generateApprovalDocumentNumber(),
+                'sianggar_status' => Activity::SIANGGAR_PENDING,
             ]);
 
             app(BudgetService::class)->approve($activity);
@@ -98,12 +103,16 @@ class ApprovalService
             $this->notificationService->sendToRole(
                 'keuangan',
                 'activity.approved',
-                'Kegiatan Siap Diverifikasi',
-                "Kegiatan {$activity->activity_code} telah disetujui dan menunggu verifikasi keuangan.",
+                'Kegiatan Siap Diteruskan',
+                "Kegiatan {$activity->activity_code} telah disetujui dan diteruskan ke Sianggar untuk pengajuan pencairan.",
             );
 
+            // afterCommit: the job re-reads the activity, so it must not
+            // run against a transaction that could still roll back.
+            PushApprovedActivityToSianggar::dispatch($activity)->afterCommit();
+
             return $activity->fresh();
-        });
+        }));
     }
 
     public function reject(Activity $activity, User $approver, string $reason): Activity
@@ -132,6 +141,57 @@ class ApprovalService
                 'activity.rejected',
                 'Kegiatan Ditolak',
                 "Kegiatan {$activity->activity_code} ditolak: {$reason}",
+            );
+
+            return $activity->fresh();
+        });
+    }
+
+    /**
+     * Reopens an approved kegiatan for editing after SDM asked for a
+     * revision in Sianggar (FLOW.md section 8).
+     *
+     * REJECTED is reused rather than inventing a new status: it already
+     * means "editable, needs to be submitted and approved again", which
+     * is exactly the required outcome. Kepala Sekolah must approve the
+     * corrected honor, because disbursing a figure that changed after
+     * approval would rest on an approval that never saw it (BR-03).
+     */
+    public function returnForRevision(Activity $activity, string $reason): Activity
+    {
+        if ($activity->status !== Activity::APPROVED) {
+            throw new BusinessValidationException(
+                'status',
+                'Hanya kegiatan berstatus APPROVED yang dapat dikembalikan untuk revisi.',
+            );
+        }
+
+        return DB::transaction(function () use ($activity, $reason) {
+            $activity->update([
+                'status' => Activity::REJECTED,
+                'approved_at' => null,
+                // The handoff has to happen again once it is re-approved.
+                'sianggar_status' => null,
+                'sianggar_synced_at' => null,
+                'sianggar_last_error' => null,
+            ]);
+
+            $this->auditService->logModel('activity.returned_for_revision', $activity, newValues: [
+                'status' => Activity::REJECTED,
+                'reason' => $reason,
+            ]);
+
+            $this->notificationService->send(
+                $activity->creator,
+                'activity.revision_requested',
+                'Revisi Diminta',
+                "Kegiatan {$activity->activity_code} dikembalikan untuk revisi. {$reason}",
+            );
+            $this->notificationService->sendToRole(
+                'kepala_sekolah',
+                'activity.revision_requested',
+                'Kegiatan Dikembalikan untuk Revisi',
+                "Kegiatan {$activity->activity_code} dikembalikan SDM dan perlu disetujui ulang setelah diperbaiki.",
             );
 
             return $activity->fresh();

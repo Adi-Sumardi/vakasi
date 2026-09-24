@@ -25,6 +25,13 @@ class DocumentService
 
     private const MAX_FILE_SIZE_KB = 5 * 1024; // 5 MB
 
+    /** Extension is derived from the validated MIME, never from the client-supplied filename. */
+    private const EXTENSION_FOR_MIME = [
+        'application/pdf' => 'pdf',
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+    ];
+
     public function __construct(private readonly AuditService $auditService) {}
 
     public function store(
@@ -42,7 +49,7 @@ class DocumentService
             throw new BusinessValidationException('file', 'Ukuran file maksimal 5MB.');
         }
 
-        $randomName = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
+        $randomName = Str::uuid()->toString().'.'.self::EXTENSION_FOR_MIME[$file->getMimeType()];
         $directory = $activity ? "documents/activities/{$activity->id}" : "documents/payments/{$payment?->id}";
         $path = $file->storeAs($directory, $randomName, 'local');
 

@@ -6,11 +6,14 @@ use App\Models\Activity;
 use App\Models\ActivityMember;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Concerns\RetriesUniqueNumber;
 use App\Services\Exceptions\BusinessValidationException;
 use Illuminate\Support\Facades\DB;
 
 class ActivityService
 {
+    use RetriesUniqueNumber;
+
     public function __construct(
         private readonly AuditService $auditService,
         private readonly BudgetService $budgetService,
@@ -21,7 +24,7 @@ class ActivityService
      */
     public function create(array $data, User $creator): Activity
     {
-        return DB::transaction(function () use ($data, $creator) {
+        return $this->retryingUniqueNumber('activity_code', fn () => DB::transaction(function () use ($data, $creator) {
             $activity = Activity::create([
                 ...$data,
                 'activity_code' => $this->generateActivityCode(),
@@ -34,7 +37,7 @@ class ActivityService
             $this->auditService->logModel('activity.created', $activity, newValues: $activity->toArray());
 
             return $activity;
-        });
+        }));
     }
 
     /**
@@ -89,17 +92,37 @@ class ActivityService
         return $member;
     }
 
+    /**
+     * Removing a member also removes their honor lines. ensureEditable()
+     * already restricts this to DRAFT/REJECTED, where no financial
+     * snapshot exists yet (BR-03), so there is nothing to preserve —
+     * previously this threw "hapus honor terlebih dahulu" while offering
+     * no way to delete an honor line, leaving the user stuck.
+     */
     public function removeMember(Activity $activity, ActivityMember $member): void
     {
         $this->ensureEditable($activity);
 
-        if ($member->honorDetails()->exists()) {
-            throw new BusinessValidationException('employee_id', 'Pegawai memiliki detail honor, hapus honor terlebih dahulu.');
-        }
+        DB::transaction(function () use ($activity, $member) {
+            $honorDetails = $member->honorDetails()->get();
 
-        $this->auditService->logModel('activity.member_removed', $activity, oldValues: $member->toArray());
+            if ($honorDetails->isNotEmpty()) {
+                $this->auditService->logModel(
+                    'activity.member_honor_removed',
+                    $activity,
+                    oldValues: ['honor_details' => $honorDetails->toArray()],
+                );
 
-        $member->delete();
+                $member->honorDetails()->delete();
+            }
+
+            $this->auditService->logModel('activity.member_removed', $activity, oldValues: $member->toArray());
+
+            $member->delete();
+
+            $activity->unsetRelation('honorDetails');
+            $this->budgetService->recalculateCommitted($activity);
+        });
     }
 
     public function ensureEditable(Activity $activity): void

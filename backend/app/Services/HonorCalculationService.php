@@ -35,10 +35,23 @@ class HonorCalculationService
             );
         }
 
+        $this->assertNoDuplicateLines($items);
+
         return DB::transaction(function () use ($activity, $items) {
             $details = collect($items)
                 ->map(fn (array $item) => $this->upsertLine($activity, $item))
                 ->each->load(['employee', 'honorType']);
+
+            // A recalculation replaces the activity's honor set, it does
+            // not merge into it. Without this, a line dropped from the
+            // payload survived in honor_details, so the response total
+            // (summed from $items) silently disagreed with what
+            // BudgetService and PaymentService read back from the table.
+            $activity->honorDetails()
+                ->whereNotIn('id', $details->pluck('id'))
+                ->delete();
+
+            $activity->unsetRelation('honorDetails');
 
             $this->budgetService->recalculateCommitted($activity);
 
@@ -50,6 +63,26 @@ class HonorCalculationService
                 'net_amount' => (int) $details->sum('net_amount'),
             ];
         });
+    }
+
+    /**
+     * Two lines keyed on the same (employee, honor type) pair would make
+     * the second silently overwrite the first via updateOrCreate, and the
+     * returned total would then double-count a line that exists only
+     * once in the table.
+     *
+     * @param  array<int, array{employee_id: int, honor_type_id: int}>  $items
+     */
+    private function assertNoDuplicateLines(array $items): void
+    {
+        $keys = collect($items)->map(fn (array $item) => $item['employee_id'].':'.$item['honor_type_id']);
+
+        if ($keys->count() !== $keys->unique()->count()) {
+            throw new BusinessValidationException(
+                'items',
+                'Terdapat baris honor ganda untuk kombinasi pegawai dan jenis honor yang sama.',
+            );
+        }
     }
 
     /**

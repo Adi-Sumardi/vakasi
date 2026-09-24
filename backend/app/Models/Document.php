@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Document extends Model
 {
+    /**
+     * `document_type` used to be a free-form string, which mattered
+     * because PaymentService::complete() only accepts the literal
+     * "bukti_transfer" — a typo from any client made a payment
+     * impossible to finish. These are the values the UI offers
+     * (activity-documents.tsx / dokumen/page.tsx).
+     */
+    public const ACTIVITY_TYPES = ['surat_tugas', 'daftar_hadir', 'rincian_anggaran', 'lainnya'];
+
+    public const PAYMENT_EVIDENCE_TYPES = ['bukti_transfer', 'lainnya'];
+
     const UPDATED_AT = null;
 
     protected $fillable = [

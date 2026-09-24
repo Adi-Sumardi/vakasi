@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Document;
 
+use App\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDocumentRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class StoreDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'document_type' => ['required', 'string', 'max:100'],
+            'document_type' => ['required', 'string', Rule::in(Document::ACTIVITY_TYPES)],
             'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ];
     }

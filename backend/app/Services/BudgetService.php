@@ -44,9 +44,26 @@ class BudgetService
         return $budget;
     }
 
+    /**
+     * Lowering the pagu below what is already committed would leave
+     * remaining_amount negative and silently contradict the hard limit
+     * that recalculateCommitted() enforces in the other direction.
+     */
     public function syncBudgetAmount(Activity $activity): void
     {
         $budget = $activity->budget ?? $this->initializeForActivity($activity);
+
+        if ($activity->budget_amount < $budget->committed_amount) {
+            throw new BusinessValidationException(
+                'budget_amount',
+                sprintf(
+                    'Anggaran (Rp%s) tidak boleh lebih kecil dari honor yang sudah dihitung (Rp%s). Hitung ulang honor terlebih dahulu.',
+                    number_format($activity->budget_amount, 0, ',', '.'),
+                    number_format($budget->committed_amount, 0, ',', '.'),
+                ),
+            );
+        }
+
         $old = $budget->only(['budget_amount', 'remaining_amount']);
 
         $budget->update([
