@@ -30,6 +30,10 @@ class ActivityResource extends JsonResource
             'approved_at' => $this->approved_at,
             'completed_at' => $this->completed_at,
             'verification_code' => $this->verification_code,
+            // Nomor SK dihasilkan ApprovalService::approve() dan dipakai
+            // kartu "Bukti Approval" di halaman detail — tanpa baris ini
+            // nomornya tersimpan di database tapi tidak pernah sampai ke UI.
+            'approval_document_number' => $this->approval_document_number,
             // Handoff to Sianggar (FLOW.md section 8) — surfaced so a
             // failed push is visible instead of only sitting in the log.
             'sianggar_status' => $this->sianggar_status,

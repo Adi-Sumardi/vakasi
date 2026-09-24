@@ -106,6 +106,13 @@ class ActivityWorkflowTest extends TestCase
         $approveResponse = $this->as($kepsek)->postJson("/api/v1/activities/{$activityId}/approve");
         $approveResponse->assertOk()->assertJsonPath('data.status', 'approved');
 
+        // Nomor SK dan kode verifikasi harus ikut terkirim, bukan hanya
+        // tersimpan: halaman detail menampilkan keduanya di kartu bukti
+        // approval, dan diam-diam hilang di serialisasi tidak terlihat
+        // sampai ada yang membuka halamannya.
+        $this->assertMatchesRegularExpression('/^SK-\d{4}-\d{4}$/', $approveResponse->json('data.approval_document_number'));
+        $this->assertNotEmpty($approveResponse->json('data.verification_code'));
+
         $this->assertDatabaseHas('budgets', [
             'activity_id' => $activityId,
             'committed_amount' => 200000,
