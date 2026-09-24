@@ -112,13 +112,22 @@ class ActivityWorkflowTest extends TestCase
             'approved_amount' => 200000,
         ]);
 
-        // 6. Keuangan creates the payment (APPROVED -> VERIFIED -> PROCESSING).
+        // 6. Keuangan verifies and records the payment (APPROVED -> VERIFIED).
         $paymentResponse = $this->as($keuangan)->postJson('/api/v1/payments', [
             'activity_id' => $activityId,
             'payment_method' => 'transfer_bank',
         ]);
         $paymentResponse->assertStatus(201)->assertJsonPath('data.total_amount', 200000);
         $paymentId = $paymentResponse->json('data.id');
+
+        $this->assertDatabaseHas('activities', ['id' => $activityId, 'status' => 'verified']);
+
+        // Completing is impossible until disbursement has actually started.
+        $this->as($keuangan)->postJson("/api/v1/payments/{$paymentId}/complete")->assertStatus(422);
+
+        // 6b. Keuangan starts disbursement (VERIFIED -> PROCESSING).
+        $this->as($keuangan)->postJson("/api/v1/payments/{$paymentId}/process")
+            ->assertOk()->assertJsonPath('data.status', 'processing');
 
         $this->assertDatabaseHas('activities', ['id' => $activityId, 'status' => 'processing']);
 

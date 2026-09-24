@@ -15,7 +15,11 @@ export default async function PembayaranPage() {
 
   const payments = await listPaymentsServer();
 
-  const totalProcessing = payments.filter((p) => p.status === 'processing').reduce((sum, p) => sum + p.total_amount, 0);
+  // "verified" is money committed but not yet disbursed (FR-10), so it
+  // belongs in the outstanding figure alongside "processing".
+  const totalOutstanding = payments
+    .filter((p) => p.status === 'verified' || p.status === 'processing')
+    .reduce((sum, p) => sum + p.total_amount, 0);
   const totalPaid = payments.filter((p) => p.status === 'paid').reduce((sum, p) => sum + p.total_amount, 0);
 
   return (
@@ -29,8 +33,8 @@ export default async function PembayaranPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
         <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Sedang Diproses</span>
-          <div className="font-currency-display text-headline-sm text-primary font-bold mt-space-2xs">{formatRupiah(totalProcessing)}</div>
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Belum Dicairkan</span>
+          <div className="font-currency-display text-headline-sm text-primary font-bold mt-space-2xs">{formatRupiah(totalOutstanding)}</div>
         </div>
         <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Sudah Dibayar</span>

@@ -57,6 +57,16 @@ export function uploadPaymentEvidence(paymentId: number, documentType: string, f
   return apiUpload(`/api/v1/payments/${paymentId}/evidence`, formData);
 }
 
+/** VERIFIED -> PROCESSING: finance starts the actual disbursement. */
+export function processPayment(paymentId: number): Promise<Payment> {
+  return apiFetch<Payment>(`/api/v1/payments/${paymentId}/process`, { method: 'POST' });
+}
+
+/** Abandons a payment that has not been disbursed; the activity returns to "Disetujui". */
+export function cancelPayment(paymentId: number, reason: string): Promise<Payment> {
+  return apiFetch<Payment>(`/api/v1/payments/${paymentId}/cancel`, { method: 'POST', body: { reason } });
+}
+
 export function completePayment(paymentId: number): Promise<Payment> {
   return apiFetch<Payment>(`/api/v1/payments/${paymentId}/complete`, { method: 'POST' });
 }

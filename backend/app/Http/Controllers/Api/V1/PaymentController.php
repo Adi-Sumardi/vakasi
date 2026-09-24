@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Document\StoreDocumentRequest;
+use App\Http\Requests\Payment\CancelPaymentRequest;
+use App\Http\Requests\Payment\StorePaymentEvidenceRequest;
 use App\Http\Requests\Payment\StorePaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Activity;
@@ -74,7 +75,7 @@ class PaymentController extends Controller
         return $this->success(new PaymentResource($payment), 'Pembayaran sedang diproses.');
     }
 
-    public function evidence(StoreDocumentRequest $request, Payment $payment): JsonResponse
+    public function evidence(StorePaymentEvidenceRequest $request, Payment $payment): JsonResponse
     {
         $this->authorize('view', $payment->activity);
 
@@ -95,5 +96,14 @@ class PaymentController extends Controller
         $payment = $this->paymentService->complete($payment);
 
         return $this->success(new PaymentResource($payment->load(['activity', 'details.employee'])), 'Pembayaran berhasil diselesaikan.');
+    }
+
+    public function cancel(CancelPaymentRequest $request, Payment $payment): JsonResponse
+    {
+        $this->authorize('view', $payment->activity);
+
+        $payment = $this->paymentService->cancel($payment, $request->validated('reason'));
+
+        return $this->success(new PaymentResource($payment->load(['activity', 'details.employee'])), 'Pembayaran berhasil dibatalkan.');
     }
 }

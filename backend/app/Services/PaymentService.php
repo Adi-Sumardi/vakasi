@@ -6,22 +6,29 @@ use App\Models\Activity;
 use App\Models\HonorDetail;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Concerns\RetriesUniqueNumber;
 use App\Services\Exceptions\BusinessValidationException;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Payment Architecture per ARSITEKTUR.md section 8.
  *
- * Simplification (documented, see AI_CODING_RULES.md 18): API.md does
- * not define a separate "verify" endpoint distinct from payment
- * creation, so Finance Verification (FR-10) and payment creation are
- * bundled into `create()` — the activity still visibly passes through
- * VERIFIED before PROCESSING in its audit trail.
+ * The lifecycle mirrors FLOW.md section 3 one step at a time:
+ *
+ *   create()   APPROVED  -> VERIFIED    (FR-10 Finance Verification)
+ *   process()  VERIFIED  -> PROCESSING  (FR-11 disbursement started)
+ *   complete() PROCESSING -> PAID -> COMPLETED
+ *   cancel()   VERIFIED|PROCESSING -> back to APPROVED
+ *
+ * create() used to run APPROVED -> VERIFIED -> PROCESSING in a single
+ * call, which made process() a no-op and left finance no point at which
+ * to check the figures before money moved.
  */
 class PaymentService
 {
+    use RetriesUniqueNumber;
+
     public function __construct(
         private readonly AuditService $auditService,
         private readonly NotificationService $notificationService,
@@ -45,23 +52,10 @@ class PaymentService
 
         $totalAmount = (int) $honorDetails->sum('net_amount');
 
-        // generatePaymentNumber() derives the next number from a plain
-        // count(), which two concurrent requests can both read before
-        // either commits — retry on the resulting unique-constraint
-        // violation rather than relying on locking to prevent it.
-        $attempts = 0;
-
-        while (true) {
-            try {
-                return $this->createPayment($activity, $data, $processor, $honorDetails, $totalAmount);
-            } catch (QueryException $e) {
-                $attempts++;
-
-                if ($attempts >= 3 || ! str_contains($e->getMessage(), 'payment_number')) {
-                    throw $e;
-                }
-            }
-        }
+        return $this->retryingUniqueNumber(
+            'payment_number',
+            fn () => $this->createPayment($activity, $data, $processor, $honorDetails, $totalAmount),
+        );
     }
 
     /**
@@ -79,7 +73,7 @@ class PaymentService
                 'source_account' => $data['source_account'] ?? null,
                 'total_amount' => $totalAmount,
                 'reference_number' => $data['reference_number'] ?? null,
-                'status' => Payment::PROCESSING,
+                'status' => Payment::VERIFIED,
                 'processed_by' => $processor->id,
             ]);
 
@@ -92,18 +86,50 @@ class PaymentService
                 ]);
             }
 
-            // APPROVED -> VERIFIED -> PROCESSING, each step audited.
+            // APPROVED -> VERIFIED. PROCESSING is a separate, deliberate
+            // step (process()) so finance can still check the figures here.
             $activity->update(['status' => Activity::VERIFIED]);
             $this->auditService->logModel('activity.verified', $activity, newValues: ['status' => Activity::VERIFIED]);
 
-            $activity->update(['status' => Activity::PROCESSING]);
-            $this->auditService->logModel('activity.processing', $activity, newValues: ['status' => Activity::PROCESSING]);
-
-            $this->auditService->logModel('payment.created', $payment, newValues: $payment->toArray());
+            // Never log the full model: $payment->toArray() carries
+            // source_account (AI_CODING_RULES.md section 10).
+            $this->auditService->logModel('payment.created', $payment, newValues: $payment->only([
+                'payment_number', 'activity_id', 'payment_date', 'payment_method', 'total_amount', 'status',
+            ]));
 
             $this->notificationService->send(
                 $activity->creator,
                 'payment.created',
+                'Pembayaran Diverifikasi',
+                "Pembayaran {$payment->payment_number} untuk kegiatan {$activity->activity_code} telah diverifikasi keuangan.",
+            );
+
+            return $payment->fresh('details');
+        });
+    }
+
+    /**
+     * VERIFIED -> PROCESSING: finance has checked the figures and is now
+     * actually disbursing.
+     */
+    public function process(Payment $payment): Payment
+    {
+        if ($payment->status !== Payment::VERIFIED) {
+            throw new BusinessValidationException('status', 'Hanya pembayaran berstatus VERIFIED yang dapat diproses.');
+        }
+
+        return DB::transaction(function () use ($payment) {
+            $payment->update(['status' => Payment::PROCESSING]);
+
+            $activity = $payment->activity;
+            $activity->update(['status' => Activity::PROCESSING]);
+
+            $this->auditService->logModel('activity.processing', $activity, newValues: ['status' => Activity::PROCESSING]);
+            $this->auditService->logModel('payment.processing', $payment, newValues: ['status' => Payment::PROCESSING]);
+
+            $this->notificationService->send(
+                $activity->creator,
+                'payment.processing',
                 'Pembayaran Diproses',
                 "Pembayaran {$payment->payment_number} untuk kegiatan {$activity->activity_code} sedang diproses.",
             );
@@ -112,15 +138,41 @@ class PaymentService
         });
     }
 
-    public function process(Payment $payment): Payment
+    /**
+     * Abandon a payment that has not been disbursed and hand the activity
+     * back to APPROVED so finance can record it again. The payment row
+     * itself is kept — financial records are never hard deleted (BR-04).
+     */
+    public function cancel(Payment $payment, string $reason): Payment
     {
-        if ($payment->status !== Payment::PROCESSING) {
-            throw new BusinessValidationException('status', 'Hanya pembayaran berstatus PROCESSING yang dapat diproses.');
+        if (! in_array($payment->status, [Payment::VERIFIED, Payment::PROCESSING], true)) {
+            throw new BusinessValidationException(
+                'status',
+                'Hanya pembayaran berstatus VERIFIED/PROCESSING yang dapat dibatalkan. Pembayaran yang sudah PAID bersifat final.',
+            );
         }
 
-        $this->auditService->logModel('payment.process_confirmed', $payment);
+        return DB::transaction(function () use ($payment, $reason) {
+            $old = ['status' => $payment->status];
 
-        return $payment;
+            $payment->update(['status' => Payment::CANCELLED]);
+            $payment->details()->update(['status' => 'cancelled']);
+
+            $activity = $payment->activity;
+            $activity->update(['status' => Activity::APPROVED]);
+
+            $this->auditService->logModel('payment.cancelled', $payment, $old, ['status' => Payment::CANCELLED, 'reason' => $reason]);
+            $this->auditService->logModel('activity.payment_cancelled', $activity, newValues: ['status' => Activity::APPROVED, 'reason' => $reason]);
+
+            $this->notificationService->send(
+                $activity->creator,
+                'payment.cancelled',
+                'Pembayaran Dibatalkan',
+                "Pembayaran {$payment->payment_number} dibatalkan: {$reason}",
+            );
+
+            return $payment->fresh('details');
+        });
     }
 
     public function complete(Payment $payment): Payment

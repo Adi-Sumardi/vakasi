@@ -45,7 +45,7 @@ class PaymentAuthorizationTest extends TestCase
         return $this->actingAs($user, 'web');
     }
 
-    private function makePayment(Activity $activity): Payment
+    private function makePayment(Activity $activity, string $status = Payment::PROCESSING): Payment
     {
         return Payment::create([
             'payment_number' => 'PAY-TEST-'.$activity->id,
@@ -53,7 +53,7 @@ class PaymentAuthorizationTest extends TestCase
             'payment_date' => now()->toDateString(),
             'payment_method' => 'transfer_bank',
             'total_amount' => 100000,
-            'status' => Payment::PROCESSING,
+            'status' => $status,
             'processed_by' => User::factory()->create()->id,
         ]);
     }
@@ -90,7 +90,8 @@ class PaymentAuthorizationTest extends TestCase
     {
         $keuangan = $this->userWithRole('keuangan', ['payments.view', 'payments.process']);
         $activity = Activity::factory()->create();
-        $payment = $this->makePayment($activity);
+        // process() moves VERIFIED -> PROCESSING, so start from VERIFIED.
+        $payment = $this->makePayment($activity, Payment::VERIFIED);
 
         $this->as($keuangan)->getJson('/api/v1/payments')->assertOk()
             ->assertJsonCount(1, 'data');

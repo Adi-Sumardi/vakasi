@@ -11,11 +11,27 @@ class Payment extends Model
 {
     use HasFactory;
 
+    /**
+     * Finance has verified the activity's honor and recorded the payment,
+     * but no money has moved yet (PRD.md FR-10, distinct from FR-11).
+     */
+    public const VERIFIED = 'verified';
+
     public const PROCESSING = 'processing';
 
     public const PAID = 'paid';
 
     public const FAILED = 'payment_failed';
+
+    /**
+     * A payment abandoned before disbursement. The row is kept and the
+     * activity returns to APPROVED — financial records are never hard
+     * deleted (BR-04 / AI_CODING_RULES.md section 5).
+     */
+    public const CANCELLED = 'cancelled';
+
+    /** Disbursement channels the school actually uses. */
+    public const METHODS = ['transfer_bank', 'tunai'];
 
     protected $fillable = [
         'payment_number',
