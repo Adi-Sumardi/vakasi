@@ -1,5 +1,24 @@
 import { apiFetch } from '@/lib/api/client';
 
+/**
+ * Only active master data may be attached to a new activity — the API
+ * validates this (StoreActivityRequest), so offering inactive options in
+ * a picker would only produce a 422 after the user has filled the form.
+ */
+export function activeOnly<T extends { status: string }>(rows: T[]): T[] {
+  return rows.filter((row) => row.status === 'active');
+}
+
+/**
+ * Same as activeOnly, but keeps whatever the record already points at.
+ * An activity created before a unit was retired still references it; if
+ * the edit form dropped that option, the select would silently fall back
+ * to the first entry and change the value on save.
+ */
+export function activeOrCurrent<T extends { id: number; status: string }>(rows: T[], currentId: number): T[] {
+  return rows.filter((row) => row.status === 'active' || row.id === currentId);
+}
+
 export type Unit = { id: number; code: string; name: string; status: string };
 export type Position = { id: number; code: string; name: string; status: string };
 export type ActivityType = { id: number; code: string; name: string; description: string | null; status: string };

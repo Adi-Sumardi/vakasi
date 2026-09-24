@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { Icon } from '@/components/ui/icon';
 import { API_URL } from '@/lib/api/config';
@@ -27,7 +28,7 @@ type VerificationResult = {
  * Public verification page for the QR code generated on Kepala
  * Sekolah approval — see FLOW.md section 8. Deliberately outside
  * (dashboard) and excluded from proxy.ts's auth redirect: anyone
- * scanning the printed slip/QR (SiHaris, Sianggar, an auditor) lands
+ * scanning the printed slip/QR (Sianggar, Sianggar, an auditor) lands
  * here without a VAKASI account. Calls the backend's public endpoint
  * directly with a plain fetch — no cookies, no serverApiFetch.
  */
@@ -44,7 +45,14 @@ export default async function VerifyPage({ params }: { params: Promise<{ code: s
     <div className="min-h-screen flex items-center justify-center p-space-lg bg-surface">
       <div className="w-full max-w-lg bg-surface-container-lowest rounded-2xl shadow-lg border border-outline-variant/30 overflow-hidden">
         <div className="p-space-xl text-center border-b border-outline-variant/30">
-          <img alt="Logo VAKASI" className="h-10 w-auto object-contain mx-auto mb-space-sm" src="/logo.png" />
+          <Image
+            alt="Logo VAKASI"
+            src="/logo.png"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-auto object-contain mx-auto mb-space-sm"
+          />
           <h1 className="font-headline-sm text-headline-sm text-primary font-bold">VAKASI</h1>
           <p className="font-body-sm text-body-sm text-on-surface-variant">Verifikasi Approval Kegiatan</p>
         </div>

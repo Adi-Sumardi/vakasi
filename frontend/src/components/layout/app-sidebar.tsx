@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -43,10 +44,13 @@ export function AppSidebar({ user }: { user: AuthUser }) {
     <Sidebar className="border-r border-outline-variant/30 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
       <SidebarHeader className="h-header-height px-space-lg flex flex-row items-center justify-between border-b border-outline-variant/30">
         <div className="flex items-center gap-space-sm">
-          <img
+          <Image
             alt="Logo VAKASI"
-            className="h-8 w-auto object-contain"
             src="/logo.png"
+            width={32}
+            height={32}
+            priority
+            className="h-8 w-auto object-contain"
           />
           <div className="flex flex-col">
             <span className="font-headline-sm text-headline-sm tracking-tight text-primary leading-none font-bold">
