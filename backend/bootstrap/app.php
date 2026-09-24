@@ -23,6 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // Aplikasi ini API-only dan tidak punya route bernama "login".
+        // Tanpa ini, permintaan tak terautentikasi yang tidak meminta JSON
+        // (mis. dibuka langsung di browser) membuat Authenticate mencoba
+        // redirect ke route('login') dan melempar RouteNotFoundException —
+        // 500, padahal yang benar 401.
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
             'active' => EnsureUserIsActive::class,

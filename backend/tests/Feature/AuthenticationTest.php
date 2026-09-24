@@ -43,6 +43,19 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user, 'web');
     }
 
+    /**
+     * Aplikasi ini tidak punya route bernama "login". Sebelum
+     * redirectGuestsTo() disetel, permintaan tanpa Accept: application/json
+     * membuat Authenticate mencoba redirect ke sana dan berujung 500 —
+     * hanya tidak terlihat karena SPA selalu meminta JSON.
+     */
+    public function test_unauthenticated_browser_request_returns_401_not_500(): void
+    {
+        $response = $this->get('/api/v1/auth/me');
+
+        $response->assertStatus(401)->assertJsonPath('success', false);
+    }
+
     public function test_login_fails_with_invalid_password(): void
     {
         $user = User::factory()->create();
