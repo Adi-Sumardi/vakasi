@@ -8,6 +8,7 @@ use App\Http\Requests\HonorType\StoreHonorTypeRequest;
 use App\Http\Requests\HonorType\UpdateHonorTypeRequest;
 use App\Http\Resources\HonorTypeResource;
 use App\Models\HonorType;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,5 +44,16 @@ class HonorTypeController extends Controller
         $honorType->update($request->validated());
 
         return $this->success(new HonorTypeResource($honorType), 'Jenis honor berhasil diperbarui.');
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, HonorType $honorType, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($honorType, $request->user());
+
+        return $this->success(message: 'Jenis honor berhasil dihapus.');
     }
 }

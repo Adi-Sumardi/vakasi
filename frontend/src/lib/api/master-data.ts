@@ -104,3 +104,9 @@ export function uploadHonorRateDecree(id: number, file: File): Promise<HonorRate
 
 export const honorRateDecreeUrl = (id: number) =>
   `${process.env.NEXT_PUBLIC_API_URL}/api/v1/honor-rates/${id}/decree`;
+
+/** Permanent delete of an unused master record (Super Admin, master-data.delete). */
+export type MasterDataResource = 'units' | 'positions' | 'activity-types' | 'fund-sources' | 'honor-types' | 'honor-rates';
+
+export const deleteMasterData = (resource: MasterDataResource, id: number): Promise<null> =>
+  apiFetch(`/api/v1/${resource}/${id}`, { method: 'DELETE' });

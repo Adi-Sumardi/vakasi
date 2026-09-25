@@ -90,6 +90,10 @@ Route::prefix('v1')->group(function () {
                 Route::post("/{$resource['uri']}", [$resource['controller'], 'store']);
                 Route::put("/{$resource['uri']}/{{$resource['param']}}", [$resource['controller'], 'update']);
             });
+            // Permanent delete (typos, duplicates) - Super Admin by default,
+            // and only while the record is unused.
+            Route::middleware('permission:master-data.delete')
+                ->delete("/{$resource['uri']}/{{$resource['param']}}", [$resource['controller'], 'destroy']);
         }
 
         // The SK Yayasan behind a tariff, so reviewers can check the rate

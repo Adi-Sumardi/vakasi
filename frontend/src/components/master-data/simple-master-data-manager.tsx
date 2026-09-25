@@ -18,6 +18,8 @@ import {
   updateHonorType,
   updatePosition,
   updateUnit,
+  deleteMasterData,
+  type MasterDataResource,
   type SimpleMasterDataInput,
 } from '@/lib/api/master-data';
 
@@ -28,6 +30,14 @@ const CREATORS = {
   'honor-type': createHonorType,
   'fund-source': createFundSource,
 } as const;
+
+const RESOURCES: Record<keyof typeof CREATORS, MasterDataResource> = {
+  unit: 'units',
+  position: 'positions',
+  'activity-type': 'activity-types',
+  'honor-type': 'honor-types',
+  'fund-source': 'fund-sources',
+};
 
 const UPDATERS = {
   unit: updateUnit,
@@ -56,6 +66,8 @@ type Props = {
   /** For HonorType's "satuan" (JAM/HARI/PAKET/...) field. */
   extraField?: { key: 'unit'; label: string; placeholder: string };
   kind: keyof typeof CREATORS;
+  /** Super Admin may permanently delete a record that is still unused. */
+  canDelete?: boolean;
   /** Tabs of a combined master-data page, shown above the title. */
   tabs?: React.ReactNode;
 };
@@ -73,6 +85,7 @@ export function SimpleMasterDataManager({
   hasDescription,
   extraField,
   kind,
+  canDelete = false,
   tabs,
 }: Props) {
   const router = useRouter();
@@ -126,6 +139,22 @@ export function SimpleMasterDataManager({
       toast.error(error instanceof ApiError ? error.message : `Gagal menyimpan ${title.toLowerCase()}.`);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(item: { id: number; name: string }) {
+    if (!window.confirm(`Hapus permanen "${item.name}"? Data yang sudah dipakai tidak dapat dihapus; nonaktifkan saja.`)) {
+      return;
+    }
+    setBusyId(item.id);
+    try {
+      await deleteMasterData(RESOURCES[kind], item.id);
+      toast.success(`${item.name} dihapus.`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'Gagal menghapus data.');
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -205,6 +234,17 @@ export function SimpleMasterDataManager({
                         >
                           <Icon name={item.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
                         </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            disabled={busyId === item.id}
+                            onClick={() => handleDelete(item)}
+                            title="Hapus permanen"
+                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                          >
+                            <Icon name="delete" className="text-[18px]" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common/page-header';
+import { CurrencyInput } from '@/components/common/currency-input';
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 import { formatRupiah } from '@/lib/format';
@@ -315,15 +316,8 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
               />
             </div>
             <div>
-              <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Anggaran (Rp)</label>
-              <input
-                type="number"
-                required
-                min={1}
-                value={info.budget_amount}
-                onChange={(e) => setInfo({ ...info, budget_amount: Number(e.target.value) })}
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:outline-none"
-              />
+              <label htmlFor="wizard-budget" className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Anggaran</label>
+              <CurrencyInput id="wizard-budget" required value={info.budget_amount} onChange={(v) => setInfo({ ...info, budget_amount: v })} />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

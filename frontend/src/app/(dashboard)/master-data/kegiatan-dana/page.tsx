@@ -1,9 +1,12 @@
 import { PageTabs } from '@/components/common/page-tabs';
 import { SimpleMasterDataManager } from '@/components/master-data/simple-master-data-manager';
+import { hasPermission } from '@/lib/api/auth';
+import { meServer } from '@/lib/api/auth.server';
 import { listActivityTypes, listFundSources } from '@/lib/api/master-data.server';
 
 /** "Jenis Kegiatan & Sumber Dana": the two lookups picked when raising an activity. */
 export default async function KegiatanDanaPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const canDelete = hasPermission(await meServer(), 'master-data.delete');
   const { tab = 'jenis' } = await searchParams;
   const tabs = (
     <PageTabs
@@ -25,7 +28,8 @@ export default async function KegiatanDanaPage({ searchParams }: { searchParams:
         addLabel="Tambah Sumber Dana"
         items={await listFundSources()}
         hasDescription
-        tabs={tabs}
+        canDelete={canDelete}
+      tabs={tabs}
       />
     );
   }
@@ -39,6 +43,7 @@ export default async function KegiatanDanaPage({ searchParams }: { searchParams:
       addLabel="Tambah Jenis Kegiatan"
       items={await listActivityTypes()}
       hasDescription
+      canDelete={canDelete}
       tabs={tabs}
     />
   );

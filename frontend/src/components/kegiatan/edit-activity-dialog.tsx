@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { CurrencyInput } from '@/components/common/currency-input';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { updateActivity, type Activity } from '@/lib/api/activities';
@@ -137,15 +138,8 @@ export function EditActivityDialog({ activity, activityTypes, units, fundSources
                   />
                 </div>
                 <div>
-                  <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Anggaran (Rp)</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={form.budget_amount}
-                    onChange={(e) => setForm({ ...form, budget_amount: Number(e.target.value) })}
-                    className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:outline-none"
-                  />
+                  <label htmlFor="edit-budget" className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Anggaran</label>
+                  <CurrencyInput id="edit-budget" required value={form.budget_amount} onChange={(v) => setForm({ ...form, budget_amount: v })} className="h-9" />
                 </div>
               </div>
               <div>

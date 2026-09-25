@@ -10,6 +10,7 @@ use App\Http\Requests\HonorRate\UploadHonorRateDecreeRequest;
 use App\Http\Resources\HonorRateResource;
 use App\Models\HonorRate;
 use App\Services\AuditService;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -93,5 +94,16 @@ class HonorRateController extends Controller
         }
 
         return Storage::disk('local')->download($honorRate->decree_file_path, $honorRate->decree_file_name);
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, HonorRate $honorRate, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($honorRate, $request->user());
+
+        return $this->success(message: 'Tarif honor berhasil dihapus.');
     }
 }

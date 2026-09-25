@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common/page-header';
+import { CurrencyInput } from '@/components/common/currency-input';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import {
   createHonorRate,
+  deleteMasterData,
   honorRateDecreeUrl,
   updateHonorRate,
   uploadHonorRateDecree,
@@ -45,6 +47,7 @@ export function HonorRateManager({
   honorTypes,
   units,
   canManage = true,
+  canDelete = false,
   tabs,
 }: {
   rates: HonorRate[];
@@ -52,6 +55,8 @@ export function HonorRateManager({
   units: Unit[];
   /** False for roles that may only read the tariff (e.g. TU). */
   canManage?: boolean;
+  /** Super Admin may permanently delete a tariff no honor was calculated with. */
+  canDelete?: boolean;
   tabs?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -110,6 +115,22 @@ export function HonorRateManager({
       toast.error(error instanceof ApiError ? error.message : 'Gagal menyimpan tarif honor.');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(item: HonorRate) {
+    if (!window.confirm(`Hapus permanen tarif ${item.honor_type.name} ${formatRupiah(item.rate)}? Data yang sudah dipakai tidak dapat dihapus; nonaktifkan saja.`)) {
+      return;
+    }
+    setBusyId(item.id);
+    try {
+      await deleteMasterData('honor-rates', item.id);
+      toast.success('Tarif honor dihapus.');
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'Gagal menghapus data.');
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -252,6 +273,17 @@ export function HonorRateManager({
                           >
                             <Icon name={r.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
                           </button>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              disabled={busyId === r.id}
+                              onClick={() => handleDelete(r)}
+                              title="Hapus permanen"
+                              className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                            >
+                              <Icon name="delete" className="text-[18px]" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -299,15 +331,8 @@ export function HonorRateManager({
                 </select>
               </div>
               <div>
-                <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Tarif (Rp)</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  value={form.rate}
-                  onChange={(e) => setForm({ ...form, rate: Number(e.target.value) })}
-                  className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:bg-surface-container-lowest focus:outline-none"
-                />
+                <label htmlFor="rate-amount" className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Tarif</label>
+                <CurrencyInput id="rate-amount" required value={form.rate} onChange={(v) => setForm({ ...form, rate: v })} className="h-9" />
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-3">
                 <div>

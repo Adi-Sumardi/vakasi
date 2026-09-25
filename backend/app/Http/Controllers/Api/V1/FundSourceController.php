@@ -8,6 +8,7 @@ use App\Http\Requests\FundSource\StoreFundSourceRequest;
 use App\Http\Requests\FundSource\UpdateFundSourceRequest;
 use App\Http\Resources\FundSourceResource;
 use App\Models\FundSource;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,5 +44,16 @@ class FundSourceController extends Controller
         $fundSource->update($request->validated());
 
         return $this->success(new FundSourceResource($fundSource), 'Sumber dana berhasil diperbarui.');
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, FundSource $fundSource, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($fundSource, $request->user());
+
+        return $this->success(message: 'Sumber dana berhasil dihapus.');
     }
 }

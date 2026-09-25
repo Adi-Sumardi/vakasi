@@ -8,6 +8,7 @@ use App\Http\Requests\ActivityType\StoreActivityTypeRequest;
 use App\Http\Requests\ActivityType\UpdateActivityTypeRequest;
 use App\Http\Resources\ActivityTypeResource;
 use App\Models\ActivityType;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,5 +44,16 @@ class ActivityTypeController extends Controller
         $activityType->update($request->validated());
 
         return $this->success(new ActivityTypeResource($activityType), 'Jenis kegiatan berhasil diperbarui.');
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, ActivityType $activityType, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($activityType, $request->user());
+
+        return $this->success(message: 'Jenis kegiatan berhasil dihapus.');
     }
 }

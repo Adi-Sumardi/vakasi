@@ -8,6 +8,7 @@ use App\Http\Requests\Unit\StoreUnitRequest;
 use App\Http\Requests\Unit\UpdateUnitRequest;
 use App\Http\Resources\UnitResource;
 use App\Models\Unit;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,5 +44,16 @@ class UnitController extends Controller
         $unit->update($request->validated());
 
         return $this->success(new UnitResource($unit), 'Unit berhasil diperbarui.');
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, Unit $unit, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($unit, $request->user());
+
+        return $this->success(message: 'Unit berhasil dihapus.');
     }
 }

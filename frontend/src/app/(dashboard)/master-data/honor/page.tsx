@@ -13,6 +13,7 @@ import { listHonorRates, listHonorTypes, listUnits } from '@/lib/api/master-data
 export default async function HonorTarifPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const me = await meServer();
   const canManage = hasPermission(me, 'honor-rates.manage');
+  const canDelete = hasPermission(me, 'master-data.delete');
   const { tab = 'tarif' } = await searchParams;
 
   const tabs = canManage ? (
@@ -36,6 +37,7 @@ export default async function HonorTarifPage({ searchParams }: { searchParams: P
         items={await listHonorTypes()}
         hasDescription
         extraField={{ key: 'unit', label: 'Satuan', placeholder: 'JAM / HARI / PAKET / KEGIATAN' }}
+        canDelete={canDelete}
         tabs={tabs}
       />
     );
@@ -43,5 +45,5 @@ export default async function HonorTarifPage({ searchParams }: { searchParams: P
 
   const [rates, honorTypes, units] = await Promise.all([listHonorRates(), listHonorTypes(), listUnits()]);
 
-  return <HonorRateManager rates={rates} honorTypes={honorTypes} units={units} canManage={canManage} tabs={tabs} />;
+  return <HonorRateManager rates={rates} honorTypes={honorTypes} units={units} canManage={canManage} canDelete={canDelete} tabs={tabs} />;
 }

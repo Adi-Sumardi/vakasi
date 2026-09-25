@@ -8,6 +8,7 @@ use App\Http\Requests\Position\StorePositionRequest;
 use App\Http\Requests\Position\UpdatePositionRequest;
 use App\Http\Resources\PositionResource;
 use App\Models\Position;
+use App\Services\MasterDataDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,5 +44,16 @@ class PositionController extends Controller
         $position->update($request->validated());
 
         return $this->success(new PositionResource($position), 'Jabatan berhasil diperbarui.');
+    }
+
+    /**
+     * Permanent delete for a record entered by mistake; refused while
+     * anything still uses it (MasterDataDeletionService).
+     */
+    public function destroy(Request $request, Position $position, MasterDataDeletionService $deletion): JsonResponse
+    {
+        $deletion->delete($position, $request->user());
+
+        return $this->success(message: 'Jabatan berhasil dihapus.');
     }
 }

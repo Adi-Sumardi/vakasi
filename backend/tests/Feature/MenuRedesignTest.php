@@ -276,4 +276,36 @@ class MenuRedesignTest extends TestCase
             ->assertJsonPath('data.1.members_count', 1)
             ->assertJsonPath('data.1.honor_total', 200000);
     }
+
+    public function test_super_admin_deletes_unused_master_data_only(): void
+    {
+        $superAdmin = $this->seededUser('super_admin');
+        $unused = Unit::factory()->create();
+        $withStaff = Unit::factory()->create();
+        Employee::factory()->create(['unit_id' => $withStaff->id]);
+        $withAccount = Unit::factory()->create();
+        User::factory()->create(['unit_id' => $withAccount->id]);
+
+        $this->as($superAdmin)->deleteJson("/api/v1/units/{$unused->id}")->assertOk();
+        $this->assertModelMissing($unused);
+
+        $this->as($superAdmin)->deleteJson("/api/v1/units/{$withStaff->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('errors.record.0', fn (string $m) => str_contains($m, '1 pegawai'));
+
+        // users.unit_id is nullOnDelete: without the check this would
+        // silently turn a unit TU into a yayasan-wide account.
+        $this->as($superAdmin)->deleteJson("/api/v1/units/{$withAccount->id}")->assertStatus(422);
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'master_data.deleted']);
+    }
+
+    public function test_admin_cannot_delete_master_data(): void
+    {
+        $admin = $this->seededUser('admin');
+        $unit = Unit::factory()->create();
+
+        $this->as($admin)->deleteJson("/api/v1/units/{$unit->id}")->assertForbidden();
+        $this->assertModelExists($unit);
+    }
 }

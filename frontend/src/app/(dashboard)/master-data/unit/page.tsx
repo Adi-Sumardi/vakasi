@@ -1,9 +1,12 @@
 import { PageTabs } from '@/components/common/page-tabs';
 import { SimpleMasterDataManager } from '@/components/master-data/simple-master-data-manager';
+import { hasPermission } from '@/lib/api/auth';
+import { meServer } from '@/lib/api/auth.server';
 import { listPositions, listUnits } from '@/lib/api/master-data.server';
 
 /** "Unit & Jabatan": two small lists maintained together. */
 export default async function UnitJabatanPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const canDelete = hasPermission(await meServer(), 'master-data.delete');
   const { tab = 'unit' } = await searchParams;
   const tabs = (
     <PageTabs
@@ -24,7 +27,8 @@ export default async function UnitJabatanPage({ searchParams }: { searchParams: 
         emptyLabel="Belum ada jabatan."
         addLabel="Tambah Jabatan"
         items={await listPositions()}
-        tabs={tabs}
+        canDelete={canDelete}
+      tabs={tabs}
       />
     );
   }
@@ -37,6 +41,7 @@ export default async function UnitJabatanPage({ searchParams }: { searchParams: 
       emptyLabel="Belum ada unit."
       addLabel="Tambah Unit"
       items={await listUnits()}
+      canDelete={canDelete}
       tabs={tabs}
     />
   );

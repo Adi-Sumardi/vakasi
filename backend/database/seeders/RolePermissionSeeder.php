@@ -71,6 +71,9 @@ class RolePermissionSeeder extends Seeder
         // Unit, jabatan, jenis kegiatan, sumber dana.
         'master-data.manage' => ['master-data', 'manage', ['super_admin', 'admin']],
 
+        // Hapus permanen data master yang belum dipakai (salah input).
+        'master-data.delete' => ['master-data', 'delete', ['super_admin']],
+
         // Mengubah hak akses per role - cukup Super Admin.
         'roles.manage' => ['roles', 'manage', ['super_admin']],
 
