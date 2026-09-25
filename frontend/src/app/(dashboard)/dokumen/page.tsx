@@ -90,7 +90,7 @@ export default async function DokumenPage({ searchParams }: { searchParams: Prom
                         <a
                           href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${d.id}/download`}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener"
                           className="inline-flex items-center justify-center p-1.5 rounded text-primary hover:bg-primary-fixed"
                         >
                           <Icon name="download" className="text-[18px]" />

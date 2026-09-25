@@ -154,7 +154,7 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                             <a
                               href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${activity.id}/employees/${d.employee.id}/honor-slip`}
                               target="_blank"
-                              rel="noopener noreferrer"
+                              rel="noopener"
                               className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
                             >
                               <Icon name="description" className="text-[18px]" />
@@ -235,7 +235,7 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
               <a
                 href={`${process.env.NEXT_PUBLIC_APP_URL}/verify/${activity.verification_code}`}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="noopener"
                 className="font-body-sm text-body-sm text-primary hover:underline break-all"
               >
                 {process.env.NEXT_PUBLIC_APP_URL}/verify/{activity.verification_code}

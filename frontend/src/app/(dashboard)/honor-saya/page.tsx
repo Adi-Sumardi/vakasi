@@ -94,7 +94,7 @@ export default async function HonorSayaPage({ searchParams }: { searchParams: Pr
                         <a
                           href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${h.activity.id}/employees/${h.employee_id}/honor-slip`}
                           target="_blank"
-                          rel="noopener noreferrer"
+                          rel="noopener"
                           className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
                         >
                           <Icon name="description" className="text-[18px]" />

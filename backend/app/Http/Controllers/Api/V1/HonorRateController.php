@@ -93,7 +93,8 @@ class HonorRateController extends Controller
             abort(404, 'Berkas SK tarif belum diunggah.');
         }
 
-        return Storage::disk('local')->download($honorRate->decree_file_path, $honorRate->decree_file_name);
+        // Inline so the SK opens in the browser; see DocumentService::streamDownload.
+        return Storage::disk('local')->response($honorRate->decree_file_path, $honorRate->decree_file_name);
     }
 
     /**

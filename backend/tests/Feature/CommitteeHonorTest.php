@@ -179,7 +179,11 @@ class CommitteeHonorTest extends TestCase
             ->assertJsonPath('data.has_decree_file', true)
             ->assertJsonPath('data.decree_file_name', 'sk-tarif.pdf');
 
-        $this->as($admin)->get("/api/v1/honor-rates/{$rateId}/decree")->assertOk();
+        // Inline, so "lihat SK" opens the PDF instead of forcing a download.
+        $disposition = $this->as($admin)->get("/api/v1/honor-rates/{$rateId}/decree")
+            ->assertOk()
+            ->headers->get('Content-Disposition');
+        $this->assertStringStartsWith('inline', $disposition);
     }
 
     public function test_sk_panitia_and_documents_travel_with_the_handoff(): void

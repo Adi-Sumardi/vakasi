@@ -75,6 +75,11 @@ class DocumentService
             throw new BusinessValidationException('file', 'File tidak ditemukan di storage.');
         }
 
-        return Storage::disk('local')->download($document->file_path, $document->file_name);
+        // Inline, not attachment: a PDF or scan opens in the browser's
+        // viewer (which has its own download button) instead of being
+        // saved straight away. Links to this route must not use
+        // rel="noreferrer": Sanctum only reads the session cookie when
+        // the request carries a Referer/Origin from the frontend.
+        return Storage::disk('local')->response($document->file_path, $document->file_name);
     }
 }

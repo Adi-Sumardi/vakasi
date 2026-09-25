@@ -244,7 +244,7 @@ export function HonorRateManager({
                         <a
                           href={honorRateDecreeUrl(r.id)}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener"
                           className="text-primary text-xs hover:underline"
                         >
                           {r.decree_file_name ?? 'Lihat berkas SK'}

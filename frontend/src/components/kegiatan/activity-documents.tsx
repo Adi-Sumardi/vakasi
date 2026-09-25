@@ -109,7 +109,7 @@ export function ActivityDocuments({
               key={d.id}
               href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${d.id}/download`}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener"
               className="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"
             >
               <Icon name="description" className="text-primary text-[20px]" />
