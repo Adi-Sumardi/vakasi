@@ -35,10 +35,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Left zone */}
           <div className="flex items-center gap-space-lg">
             <SidebarTrigger className="text-on-surface-variant hover:bg-surface-container" />
-            <div className="hidden xl:flex items-center px-space-md py-space-xs rounded-full bg-secondary-container/60 text-on-secondary-fixed text-label-sm font-label-sm border border-outline-variant/40 gap-space-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span>Sistem Honorarium &amp; Kegiatan</span>
-            </div>
             <HeaderSearch />
             <NotificationBell />
           </div>
