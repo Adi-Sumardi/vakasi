@@ -53,15 +53,6 @@ export function AppSidebar({ user }: { user: AuthUser }) {
       </SidebarHeader>
 
       <SidebarContent className="px-space-md py-space-md space-y-space-xs">
-        {/* Which data this account works on: a unit-bound account never
-            sees other schools, so say so up front. */}
-        <div className="flex items-center justify-between gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-low font-label-sm text-label-sm">
-          <span className="text-on-surface-variant">Cakupan data</span>
-          <span className="font-semibold text-on-surface truncate">
-            {user.scoped_unit_id ? (user.unit?.name ?? 'Unit sendiri') : 'Semua unit'}
-          </span>
-        </div>
-
         {groups.map((group, index) => (
           <SidebarGroup key={group.label ?? `group-${index}`} className="p-0">
             {group.label && (
