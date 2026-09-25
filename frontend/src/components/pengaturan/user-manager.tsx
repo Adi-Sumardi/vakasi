@@ -10,6 +10,8 @@ import { ApiError } from '@/lib/api/types';
 import { ROLE_LABEL } from '@/lib/api/auth';
 import type { Unit } from '@/lib/api/master-data';
 import { createUser, updateUser, type AppUser, type Role } from '@/lib/api/users';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 type FormState = { name: string; email: string; password: string; role_id: number; unit_id: number | '' };
 
@@ -29,6 +31,7 @@ export function UserManager({
   currentUserId: number;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +85,17 @@ export function UserManager({
 
   async function toggleStatus(user: AppUser) {
     const nextStatus = user.status === 'active' ? 'inactive' : 'active';
+    if (
+      nextStatus === 'inactive' &&
+      !(await confirm({
+        title: `Nonaktifkan akun ${user.name}?`,
+        description: 'Pengguna ini tidak bisa login sampai akunnya diaktifkan kembali.',
+        confirmLabel: 'Nonaktifkan',
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusyId(user.id);
     try {
       await updateUser(user.id, { status: nextStatus });
@@ -149,23 +163,25 @@ export function UserManager({
                     </td>
                     <td className="px-space-base py-space-sm">
                       <div className="flex items-center justify-center gap-space-2xs">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(u)}
-                          title="Edit"
-                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                        >
-                          <Icon name="edit" className="text-[18px]" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === u.id || u.id === currentUserId}
-                          onClick={() => toggleStatus(u)}
-                          title={u.id === currentUserId ? 'Tidak dapat menonaktifkan akun sendiri' : (u.status === 'active' ? 'Nonaktifkan' : 'Aktifkan')}
-                          className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
-                        >
-                          <Icon name={u.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                        </button>
+                        <Hint label="Edit">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(u)}
+                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                          >
+                            <Icon name="edit" className="text-[18px]" />
+                          </button>
+                        </Hint>
+                        <Hint label={u.id === currentUserId ? 'Tidak dapat menonaktifkan akun sendiri' : (u.status === 'active' ? 'Nonaktifkan' : 'Aktifkan')}>
+                          <button
+                            type="button"
+                            disabled={busyId === u.id || u.id === currentUserId}
+                            onClick={() => toggleStatus(u)}
+                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+                          >
+                            <Icon name={u.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
+                          </button>
+                        </Hint>
                       </div>
                     </td>
                   </tr>

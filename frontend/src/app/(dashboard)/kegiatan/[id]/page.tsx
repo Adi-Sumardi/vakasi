@@ -15,6 +15,7 @@ import { hasPermission } from '@/lib/api/auth';
 import { activeOnly, activeOrCurrent } from '@/lib/api/master-data';
 import { listActivityTypes, listFundSources, listHonorTypes, listUnits } from '@/lib/api/master-data.server';
 import { formatRupiah } from '@/lib/format';
+import { Hint } from '@/components/common/hint';
 
 export default async function ActivityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -149,15 +150,16 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                           {formatRupiah(d.net_amount)}
                         </td>
                         <td className="px-space-lg py-space-sm text-center">
-                          <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${activity.id}/employees/${d.employee.id}/honor-slip`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Cetak Slip"
-                            className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                          >
-                            <Icon name="description" className="text-[18px]" />
-                          </a>
+                          <Hint label="Cetak Slip">
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${activity.id}/employees/${d.employee.id}/honor-slip`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                            >
+                              <Icon name="description" className="text-[18px]" />
+                            </a>
+                          </Hint>
                         </td>
                       </tr>
                     ))}

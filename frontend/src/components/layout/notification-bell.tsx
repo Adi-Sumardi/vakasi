@@ -13,6 +13,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 import { listNotifications, markNotificationRead, type AppNotification } from '@/lib/api/notifications';
+import { Hint } from '@/components/common/hint';
 
 function formatTimestamp(iso: string): string {
   return new Date(iso).toLocaleString('id-ID', {
@@ -75,16 +76,17 @@ export function NotificationBell() {
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger
         render={
-          <button
-            type="button"
-            className="relative p-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors"
-            title="Notifikasi"
-          >
-            <Icon name="notifications" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container-lowest" />
-            )}
-          </button>
+          <Hint label="Notifikasi">
+            <button
+              type="button"
+              className="relative p-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors"
+            >
+              <Icon name="notifications" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container-lowest" />
+              )}
+            </button>
+          </Hint>
         }
       />
       <DropdownMenuContent align="start" className="w-80 bg-surface-container-lowest shadow-lg border border-outline-variant/40 p-0">

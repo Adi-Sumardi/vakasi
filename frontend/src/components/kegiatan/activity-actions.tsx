@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { useConfirm } from '@/components/common/confirm-dialog';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { approveActivity, cancelActivity, rejectActivity, submitActivity, type Activity } from '@/lib/api/activities';
@@ -18,10 +19,10 @@ type Props = {
 
 export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canManage }: Props) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showReject, setShowReject] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   async function run(fn: () => Promise<unknown>, successMsg: string) {
     setBusy(true);
@@ -37,6 +38,13 @@ export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canM
   }
 
   async function handleCancel() {
+    const ok = await confirm({
+      title: `Batalkan kegiatan ${activity.activity_code}?`,
+      description: 'Draft ini dihapus beserta anggaran dan peserta yang sudah ditambahkan. Tindakan ini tidak dapat dibatalkan.',
+      confirmLabel: 'Ya, batalkan kegiatan',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await cancelActivity(activity.id);
@@ -66,7 +74,15 @@ export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canM
         <button
           type="button"
           disabled={busy}
-          onClick={() => run(() => submitActivity(activity.id), 'Kegiatan berhasil disubmit.')}
+          onClick={async () => {
+            const ok = await confirm({
+              title: 'Ajukan ke Kepala Sekolah?',
+              description: 'Setelah diajukan, kegiatan tidak bisa diubah sampai disetujui atau ditolak.',
+              confirmLabel: 'Ya, ajukan',
+              tone: 'primary',
+            });
+            if (ok) run(() => submitActivity(activity.id), 'Kegiatan berhasil diajukan.');
+          }}
           className="flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-primary hover:bg-primary-container text-white font-label-md text-label-md font-semibold disabled:opacity-50"
         >
           <Icon name="send" className="text-base text-white" />
@@ -139,40 +155,16 @@ export function ActivityActions({ activity, isOwner, canSubmit, canApprove, canM
           (FLOW.md section 8). The handoff status is shown in its own
           card on this page. */}
 
-      {showCancel && !showCancelConfirm && (
+      {showCancel && (
         <button
           type="button"
-          onClick={() => setShowCancelConfirm(true)}
-          className="flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-surface-container-lowest hover:bg-error-container text-error font-label-md text-label-md font-semibold border border-error/40"
+          disabled={busy}
+          onClick={handleCancel}
+          className="flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-surface-container-lowest hover:bg-error-container text-error font-label-md text-label-md font-semibold border border-error/40 disabled:opacity-50"
         >
           <Icon name="block" className="text-base" />
           <span>Batalkan Kegiatan</span>
         </button>
-      )}
-
-      {showCancel && showCancelConfirm && (
-        <div className="flex flex-col gap-space-sm">
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            Kegiatan DRAFT ini akan dihapus permanen beserta anggaran dan peserta yang sudah ditambahkan. Tindakan ini tidak dapat dibatalkan.
-          </p>
-          <div className="flex gap-space-sm">
-            <button
-              type="button"
-              onClick={() => setShowCancelConfirm(false)}
-              className="flex-1 px-space-lg py-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleCancel}
-              className="flex-1 px-space-lg py-space-sm rounded-lg bg-error hover:opacity-90 text-white font-label-md text-label-md font-semibold disabled:opacity-50"
-            >
-              Ya, Batalkan
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );

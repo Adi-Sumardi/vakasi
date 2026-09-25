@@ -23,6 +23,8 @@ import {
   type ActivityMember,
   type HonorDetail,
 } from '@/lib/api/activities';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 type Props = {
   activityTypes: ActivityType[];
@@ -36,6 +38,7 @@ const STEPS = ['Informasi & Anggaran', 'Peserta & Honor', 'Review & Submit'] as 
 
 export function CreateActivityWizard({ activityTypes, units, fundSources, honorTypes, employees }: Props) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
@@ -136,6 +139,13 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
 
   async function handleRemoveMember(member: ActivityMember) {
     if (!activityId) return;
+    const ok = await confirm({
+      title: `Hapus ${member.employee.name} dari panitia?`,
+      description: `Peran ${member.role_name} dan baris honornya ikut dihapus.`,
+      confirmLabel: 'Hapus peserta',
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await removeActivityMember(activityId, member.id);
       setMembers((prev) => prev.filter((m) => m.id !== member.id));
@@ -202,6 +212,13 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
 
   async function handleSubmitActivity() {
     if (!activityId) return;
+    const ok = await confirm({
+      title: 'Ajukan ke Kepala Sekolah?',
+      description: `Total honor ${formatRupiah(honorTotals.net_amount)} untuk ${members.length} panitia. Setelah diajukan, kegiatan tidak bisa diubah sampai disetujui atau ditolak.`,
+      confirmLabel: 'Ya, ajukan',
+      tone: 'primary',
+    });
+    if (!ok) return;
     setSubmitting(true);
     try {
       await submitActivity(activityId);
@@ -481,14 +498,15 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
                           {detail ? formatRupiah(detail.net_amount) : '—'}
                         </td>
                         <td className="px-space-base py-space-sm text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(m)}
-                            title="Hapus peserta"
-                            className="p-1 rounded text-error hover:bg-error-container transition-colors"
-                          >
-                            <Icon name="close" className="text-base" />
-                          </button>
+                          <Hint label="Hapus peserta">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(m)}
+                              className="p-1 rounded text-error hover:bg-error-container transition-colors"
+                            >
+                              <Icon name="close" className="text-base" />
+                            </button>
+                          </Hint>
                         </td>
                       </tr>
                     );

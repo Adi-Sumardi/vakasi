@@ -9,6 +9,7 @@ import { ROLE_LABEL } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/types';
 import { updateRolePermissions, type RolePermissions } from '@/lib/api/users';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 const MODULE_LABEL: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -46,6 +47,7 @@ const ACTION_LABEL: Record<string, string> = {
  */
 export function RolePermissionMatrix({ data }: { data: RolePermissions }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [grants, setGrants] = useState<Record<number, Set<string>>>(() =>
     Object.fromEntries(data.roles.map((r) => [r.id, new Set(r.permissions)]))
   );
@@ -75,6 +77,14 @@ export function RolePermissionMatrix({ data }: { data: RolePermissions }) {
   }
 
   async function save(roleId: number) {
+    const role = data.roles.find((r) => r.id === roleId);
+    const ok = await confirm({
+      title: `Simpan hak akses ${role ? (ROLE_LABEL[role.name] ?? role.name) : ''}?`,
+      description: `Berlaku untuk ${role?.users_count ?? 0} akun dengan peran ini setelah mereka memuat ulang halaman.`,
+      confirmLabel: 'Simpan',
+      tone: 'warning',
+    });
+    if (!ok) return;
     setSavingId(roleId);
     try {
       await updateRolePermissions(roleId, [...grants[roleId]]);

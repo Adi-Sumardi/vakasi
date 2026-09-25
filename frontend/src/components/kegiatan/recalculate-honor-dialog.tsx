@@ -9,6 +9,8 @@ import { ApiError } from '@/lib/api/types';
 import { calculateHonor, removeActivityMember, type Activity } from '@/lib/api/activities';
 import type { HonorType } from '@/lib/api/master-data';
 import { formatRupiah } from '@/lib/format';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 type Props = {
   activity: Activity;
@@ -28,6 +30,7 @@ type Row = { honor_type_id: number; volume: number };
  */
 export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const members = activity.members ?? [];
@@ -83,6 +86,14 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
   }
 
   async function handleRemoveMember(memberId: number) {
+    const member = members.find((m) => m.id === memberId);
+    const ok = await confirm({
+      title: `Hapus ${member?.employee.name ?? 'peserta'} dari panitia?`,
+      description: 'Peserta dan baris honornya ikut dihapus dari kegiatan ini.',
+      confirmLabel: 'Hapus peserta',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await removeActivityMember(activity.id, memberId);
@@ -212,15 +223,16 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
                         className="w-full sm:w-24 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:outline-none"
                       />
                     </div>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => handleRemoveMember(member.id)}
-                      title="Hapus peserta beserta honornya"
-                      className="h-9 px-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                    >
-                      <Icon name="delete" className="text-[18px]" />
-                    </button>
+                    <Hint label="Hapus peserta beserta honornya">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="h-9 px-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                      >
+                        <Icon name="delete" className="text-[18px]" />
+                      </button>
+                    </Hint>
                   </div>
                 ))}
               </div>

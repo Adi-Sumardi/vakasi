@@ -9,6 +9,8 @@ import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { createEmployee, updateEmployee, updateEmployeeStatus, type Employee } from '@/lib/api/employees';
 import type { Position, Unit } from '@/lib/api/master-data';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 const EMPLOYEE_TYPES = [
   { value: 'guru', label: 'Guru' },
@@ -70,6 +72,7 @@ export function EmployeeManager({
 }) {
   const canEdit = (emp: Employee) => canManage && (editableUnitId === null || emp.unit?.id === editableUnitId);
   const router = useRouter();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -131,6 +134,17 @@ export function EmployeeManager({
 
   async function toggleStatus(emp: Employee) {
     const nextStatus = emp.status === 'active' ? 'inactive' : 'active';
+    if (
+      nextStatus === 'inactive' &&
+      !(await confirm({
+        title: `Nonaktifkan ${emp.name}?`,
+        description: 'Data tetap tersimpan, tetapi tidak bisa dipilih lagi sampai diaktifkan kembali.',
+        confirmLabel: 'Nonaktifkan',
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusyId(emp.id);
     try {
       await updateEmployeeStatus(emp.id, nextStatus);
@@ -199,23 +213,25 @@ export function EmployeeManager({
                     <td className="px-space-base py-space-sm">
                       {canEdit(emp) && (
                         <div className="flex items-center justify-center gap-space-2xs">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(emp)}
-                            title="Edit"
-                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                          >
-                            <Icon name="edit" className="text-[18px]" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busyId === emp.id}
-                            onClick={() => toggleStatus(emp)}
-                            title={emp.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
-                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                          >
-                            <Icon name={emp.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                          </button>
+                          <Hint label="Edit">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(emp)}
+                              className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                            >
+                              <Icon name="edit" className="text-[18px]" />
+                            </button>
+                          </Hint>
+                          <Hint label={emp.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}>
+                            <button
+                              type="button"
+                              disabled={busyId === emp.id}
+                              onClick={() => toggleStatus(emp)}
+                              className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                            >
+                              <Icon name={emp.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
+                            </button>
+                          </Hint>
                         </div>
                       )}
                     </td>

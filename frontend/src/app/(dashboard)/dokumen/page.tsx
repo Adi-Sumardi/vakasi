@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/common/page-header';
 
 import { Icon } from '@/components/ui/icon';
+import { Hint } from '@/components/common/hint';
 import { PageTabs } from '@/components/common/page-tabs';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import type { DocumentRow } from '@/lib/api/documents.server';
@@ -85,14 +86,16 @@ export default async function DokumenPage({ searchParams }: { searchParams: Prom
                     </td>
                     <td className="px-space-base py-space-sm text-on-surface-variant">{formatSize(d.file_size)}</td>
                     <td className="px-space-base py-space-sm text-center">
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${d.id}/download`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center text-primary hover:text-primary-container"
-                      >
-                        <Icon name="download" className="text-[18px]" />
-                      </a>
+                      <Hint label="Unduh dokumen">
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${d.id}/download`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center p-1.5 rounded text-primary hover:bg-primary-fixed"
+                        >
+                          <Icon name="download" className="text-[18px]" />
+                        </a>
+                      </Hint>
                     </td>
                   </tr>
                 ))}

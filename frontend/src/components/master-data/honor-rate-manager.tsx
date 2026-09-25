@@ -19,6 +19,8 @@ import {
   type Unit,
 } from '@/lib/api/master-data';
 import { formatRupiah } from '@/lib/format';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 type FormState = {
   honor_type_id: number;
@@ -60,6 +62,7 @@ export function HonorRateManager({
   tabs?: React.ReactNode;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -119,7 +122,13 @@ export function HonorRateManager({
   }
 
   async function handleDelete(item: HonorRate) {
-    if (!window.confirm(`Hapus permanen tarif ${item.honor_type.name} ${formatRupiah(item.rate)}? Data yang sudah dipakai tidak dapat dihapus; nonaktifkan saja.`)) {
+    const ok = await confirm({
+      title: `Hapus tarif ${item.honor_type.name}?`,
+      description: `Tarif ${formatRupiah(item.rate)} dihapus permanen. Bila sudah dipakai menghitung honor, penghapusan akan ditolak; nonaktifkan saja.`,
+      confirmLabel: 'Hapus permanen',
+      tone: 'danger',
+    });
+    if (!ok) {
       return;
     }
     setBusyId(item.id);
@@ -136,6 +145,17 @@ export function HonorRateManager({
 
   async function toggleStatus(rate: HonorRate) {
     const nextStatus = rate.status === 'active' ? 'inactive' : 'active';
+    if (
+      nextStatus === 'inactive' &&
+      !(await confirm({
+        title: `Nonaktifkan tarif ${rate.honor_type.name}?`,
+        description: 'Tarif ini tidak dipakai lagi untuk menghitung honor baru. Honor yang sudah dihitung tidak berubah.',
+        confirmLabel: 'Nonaktifkan',
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusyId(rate.id);
     try {
       await updateHonorRate(rate.id, { status: nextStatus });
@@ -244,45 +264,49 @@ export function HonorRateManager({
                     {canManage && (
                       <td className="px-space-base py-space-sm">
                         <div className="flex items-center justify-center gap-space-2xs">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(r)}
-                            title="Edit"
-                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                          >
-                            <Icon name="edit" className="text-[18px]" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busyId === r.id}
-                            onClick={() => {
-                              uploadTarget.current = r.id;
-                              rowFileInput.current?.click();
-                            }}
-                            title="Unggah berkas SK tarif"
-                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors disabled:opacity-50"
-                          >
-                            <Icon name="upload_file" className="text-[18px]" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busyId === r.id}
-                            onClick={() => toggleStatus(r)}
-                            title={r.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
-                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                          >
-                            <Icon name={r.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                          </button>
-                          {canDelete && (
+                          <Hint label="Edit">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(r)}
+                              className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                            >
+                              <Icon name="edit" className="text-[18px]" />
+                            </button>
+                          </Hint>
+                          <Hint label="Unggah berkas SK tarif">
                             <button
                               type="button"
                               disabled={busyId === r.id}
-                              onClick={() => handleDelete(r)}
-                              title="Hapus permanen"
+                              onClick={() => {
+                                uploadTarget.current = r.id;
+                                rowFileInput.current?.click();
+                              }}
+                              className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors disabled:opacity-50"
+                            >
+                              <Icon name="upload_file" className="text-[18px]" />
+                            </button>
+                          </Hint>
+                          <Hint label={r.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}>
+                            <button
+                              type="button"
+                              disabled={busyId === r.id}
+                              onClick={() => toggleStatus(r)}
                               className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
                             >
-                              <Icon name="delete" className="text-[18px]" />
+                              <Icon name={r.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
                             </button>
+                          </Hint>
+                          {canDelete && (
+                            <Hint label="Hapus permanen">
+                              <button
+                                type="button"
+                                disabled={busyId === r.id}
+                                onClick={() => handleDelete(r)}
+                                className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                              >
+                                <Icon name="delete" className="text-[18px]" />
+                              </button>
+                            </Hint>
                           )}
                         </div>
                       </td>

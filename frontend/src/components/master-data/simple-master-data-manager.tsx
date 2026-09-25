@@ -22,6 +22,8 @@ import {
   type MasterDataResource,
   type SimpleMasterDataInput,
 } from '@/lib/api/master-data';
+import { Hint } from '@/components/common/hint';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 const CREATORS = {
   unit: createUnit,
@@ -89,6 +91,7 @@ export function SimpleMasterDataManager({
   tabs,
 }: Props) {
   const router = useRouter();
+  const confirm = useConfirm();
   const create = CREATORS[kind] as (input: SimpleMasterDataInput) => Promise<unknown>;
   const update = UPDATERS[kind] as (id: number, input: Partial<SimpleMasterDataInput>) => Promise<unknown>;
 
@@ -143,7 +146,13 @@ export function SimpleMasterDataManager({
   }
 
   async function handleDelete(item: { id: number; name: string }) {
-    if (!window.confirm(`Hapus permanen "${item.name}"? Data yang sudah dipakai tidak dapat dihapus; nonaktifkan saja.`)) {
+    const ok = await confirm({
+      title: `Hapus "${item.name}"?`,
+      description: 'Data dihapus permanen. Bila masih dipakai pegawai atau kegiatan, penghapusan akan ditolak; nonaktifkan saja.',
+      confirmLabel: 'Hapus permanen',
+      tone: 'danger',
+    });
+    if (!ok) {
       return;
     }
     setBusyId(item.id);
@@ -160,6 +169,17 @@ export function SimpleMasterDataManager({
 
   async function toggleStatus(item: SimpleEntity) {
     const nextStatus = item.status === 'active' ? 'inactive' : 'active';
+    if (
+      nextStatus === 'inactive' &&
+      !(await confirm({
+        title: `Nonaktifkan ${item.name}?`,
+        description: 'Data tetap tersimpan, tetapi tidak bisa dipilih lagi sampai diaktifkan kembali.',
+        confirmLabel: 'Nonaktifkan',
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusyId(item.id);
     try {
       await update(item.id, { status: nextStatus });
@@ -217,33 +237,36 @@ export function SimpleMasterDataManager({
                     </td>
                     <td className="px-space-base py-space-sm">
                       <div className="flex items-center justify-center gap-space-2xs">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(item)}
-                          title="Edit"
-                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                        >
-                          <Icon name="edit" className="text-[18px]" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === item.id}
-                          onClick={() => toggleStatus(item)}
-                          title={item.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
-                          className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                        >
-                          <Icon name={item.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                        </button>
-                        {canDelete && (
+                        <Hint label="Edit">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(item)}
+                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                          >
+                            <Icon name="edit" className="text-[18px]" />
+                          </button>
+                        </Hint>
+                        <Hint label={item.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}>
                           <button
                             type="button"
                             disabled={busyId === item.id}
-                            onClick={() => handleDelete(item)}
-                            title="Hapus permanen"
+                            onClick={() => toggleStatus(item)}
                             className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
                           >
-                            <Icon name="delete" className="text-[18px]" />
+                            <Icon name={item.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
                           </button>
+                        </Hint>
+                        {canDelete && (
+                          <Hint label="Hapus permanen">
+                            <button
+                              type="button"
+                              disabled={busyId === item.id}
+                              onClick={() => handleDelete(item)}
+                              className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                            >
+                              <Icon name="delete" className="text-[18px]" />
+                            </button>
+                          </Hint>
                         )}
                       </div>
                     </td>

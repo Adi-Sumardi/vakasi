@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { meServer } from '@/lib/api/auth.server';
 import { serverApiFetchPage, toQuery } from '@/lib/api/server';
 import { formatRupiah } from '@/lib/format';
+import { Hint } from '@/components/common/hint';
 
 type MyHonor = {
   id: number;
@@ -89,15 +90,16 @@ export default async function HonorSayaPage({ searchParams }: { searchParams: Pr
                       {h.activity.paid_at && <div className="text-outline text-xs mt-1">{h.activity.paid_at.slice(0, 10)}</div>}
                     </td>
                     <td className="px-space-base py-space-sm text-center">
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${h.activity.id}/employees/${h.employee_id}/honor-slip`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Unduh slip honor"
-                        className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                      >
-                        <Icon name="description" className="text-[18px]" />
-                      </a>
+                      <Hint label="Unduh slip honor">
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/activities/${h.activity.id}/employees/${h.employee_id}/honor-slip`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                        >
+                          <Icon name="description" className="text-[18px]" />
+                        </a>
+                      </Hint>
                     </td>
                   </tr>
                 ))}

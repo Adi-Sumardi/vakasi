@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { updateActivity, type Activity } from '@/lib/api/activities';
 import type { ActivityType, FundSource, Unit } from '@/lib/api/master-data';
+import { Hint } from '@/components/common/hint';
 
 type Props = {
   activity: Activity;
@@ -56,14 +57,15 @@ export function EditActivityDialog({ activity, activityTypes, units, fundSources
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        title="Edit informasi kegiatan"
-        className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-      >
-        <Icon name="edit" className="text-[18px]" />
-      </button>
+      <Hint label="Edit informasi kegiatan">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+        >
+          <Icon name="edit" className="text-[18px]" />
+        </button>
+      </Hint>
 
       {open && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">

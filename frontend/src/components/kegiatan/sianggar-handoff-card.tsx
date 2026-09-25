@@ -8,6 +8,7 @@ import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { pushActivityToSianggar, SIANGGAR_STATUS_LABEL, type Activity } from '@/lib/api/activities';
+import { useConfirm } from '@/components/common/confirm-dialog';
 
 const EVENT_LABEL: Record<string, string> = {
   'intake.revision_requested': 'SDM meminta revisi',
@@ -39,6 +40,7 @@ export function SianggarHandoffCard({
   canRetry: boolean;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   const status = activity.sianggar_status;
@@ -50,6 +52,13 @@ export function SianggarHandoffCard({
   const tone = TONE[status] ?? TONE.pending;
 
   async function handleRetry() {
+    const ok = await confirm({
+      title: 'Kirim ulang ke Sianggar?',
+      description: 'Data kegiatan, rincian honor, dan lampirannya dikirim lagi ke menu Vakasi di Sianggar.',
+      confirmLabel: 'Kirim ulang',
+      tone: 'primary',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await pushActivityToSianggar(activity.id);

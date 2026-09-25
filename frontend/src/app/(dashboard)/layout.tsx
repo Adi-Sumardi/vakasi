@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { ConfirmProvider } from '@/components/common/confirm-dialog';
+import { Hint } from '@/components/common/hint';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { HeaderSearch } from '@/components/layout/header-search';
 import { NotificationBell } from '@/components/layout/notification-bell';
@@ -28,13 +30,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const academicYearLabel = `TA ${academicYearStart}/${academicYearStart + 1}`;
 
   return (
+    <ConfirmProvider>
     <SidebarProvider>
       <AppSidebar user={user} />
       <SidebarInset className="bg-surface min-h-screen flex flex-col">
         <header className="sticky top-0 z-40 flex h-header-height items-center justify-between border-b border-outline-variant/30 bg-surface-container-lowest/90 px-space-xl backdrop-blur-md shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
           {/* Left zone */}
           <div className="flex items-center gap-space-lg">
-            <SidebarTrigger className="text-on-surface-variant hover:bg-surface-container" />
+            <Hint label="Buka / tutup menu" side="bottom">
+              <SidebarTrigger className="text-on-surface-variant hover:bg-surface-container" />
+            </Hint>
             <HeaderSearch />
             <NotificationBell />
           </div>
@@ -57,5 +62,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main className="flex-1 w-full bg-surface">{children}</main>
       </SidebarInset>
     </SidebarProvider>
+    </ConfirmProvider>
   );
 }
