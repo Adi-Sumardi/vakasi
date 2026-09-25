@@ -17,6 +17,12 @@ const STATUS_MAP: Record<string, { label: string; className: string; dot: string
   sent: { label: 'Terkirim', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', dot: 'bg-tertiary' },
   failed: { label: 'Gagal Kirim', className: 'bg-error-container text-on-error-container', dot: 'bg-error' },
   skipped: { label: 'Belum Dikonfigurasi', className: 'bg-surface-container text-on-surface-variant', dot: 'bg-outline' },
+  // Status Pencairan (Activity::disbursementState in the backend).
+  belum_terkirim: { label: 'Belum Terkirim', className: 'bg-error-container text-on-error-container', dot: 'bg-error' },
+  menunggu_sdm: { label: 'Menunggu SDM', className: 'bg-secondary-container text-on-secondary-container', dot: 'bg-secondary' },
+  diproses: { label: 'Diproses Sianggar', className: 'bg-primary-fixed text-on-primary-fixed-variant', dot: 'bg-primary' },
+  dibayar: { label: 'Dibayar', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', dot: 'bg-tertiary' },
+  ditolak: { label: 'Ditolak SDM', className: 'bg-error-container text-on-error-container', dot: 'bg-error' },
 };
 
 export function StatusBadge({ status }: { status: string }) {

@@ -105,6 +105,12 @@ Catatan:
 
 ## 4. Data Scope
 
+**Unit pada akun.** Setiap akun boleh diikat ke satu unit (`users.unit_id`,
+diatur di menu Pengguna). Akun non-Super Admin yang punya unit hanya
+melihat dan menindaklanjuti kegiatan unit itu (`Activity::scopeVisibleTo`,
+`User::scopedUnitId`); akun tanpa unit berlaku untuk seluruh yayasan.
+Super Admin tidak pernah dibatasi unit.
+
 ### Super Admin
 
 Semua data yang diizinkan organisasi.
@@ -115,9 +121,13 @@ Semua data operasional sekolah.
 
 ### TU
 
-Data kegiatan dan honor yang menjadi tanggung jawabnya (kegiatan yang
-dia buat, `created_by = $user->id`) --- bukan seluruh data operasional
-sekolah. Tanda "✓" pada Permission Matrix (section 3) untuk TU berarti
+Dengan unit: seluruh kegiatan unitnya (TU lain di unit yang sama boleh
+melanjutkan draft rekannya), hanya bisa membuat kegiatan untuk unitnya,
+dan hanya mengelola pegawai unitnya (tetap boleh memilih pegawai unit
+lain sebagai panitia). Tanpa unit (akun lama): kegiatan yang dia buat
+(`created_by = $user->id`). Sejak 2026-09-25 TU tidak lagi memegang
+`honor-rates.manage` dan `budget.manage`: tarif ditetapkan SK Yayasan,
+bukan oleh pihak yang mengajukan honor. Tanda "✓" pada Permission Matrix (section 3) untuk TU berarti
 "boleh akses fitur ini", bukan "tanpa scope"; scope ownership dari
 section ini tetap berlaku di semua endpoint yang menampilkan data
 kegiatan/honor/anggaran/pembayaran, termasuk `/reports/*` (Laporan,
@@ -126,7 +136,8 @@ implementasi query-level-nya.
 
 ### Kepala Sekolah
 
-Read + approval.
+Read + approval. Dengan unit: hanya melihat dan menyetujui kegiatan
+unitnya.
 
 ### Keuangan
 
@@ -273,10 +284,21 @@ bukan hanya di Policy tampilan detail --- gunakan Eloquent global scope
 atau filter eksplisit di Service/Repository:
 
 ``` text
-Guru/Tendik  -> query WHERE employee_id = $user->employee_id
-TU           -> query WHERE created_by = $user->id  (atau unit_id sesuai kebijakan sekolah)
-Auditor      -> tanpa filter, read-only di seluruh policy
+Guru/Tendik        -> kegiatan yang dia ikuti sebagai panitia
+Akun dengan unit   -> query WHERE unit_id = $user->unit_id   (bukan Super Admin)
+TU tanpa unit      -> query WHERE created_by = $user->id
+Lainnya            -> tanpa filter
 ```
+
+Satu sumber: `Activity::scopeVisibleTo($user)`, dipakai daftar kegiatan,
+approval, laporan, export, dashboard, dokumen, dan Status Pencairan;
+`ActivityPolicy::view()` memakai scope yang sama.
+
+Permission tambahan (2026-09-25): `master-data.manage` (unit, jabatan,
+jenis kegiatan, sumber dana; Super Admin & Admin), `roles.manage`
+(halaman Role & Hak Akses; Super Admin), `my-honors.view` (Honor Saya;
+Guru/Tendik). Hak akses per role kini dapat diubah dari aplikasi; seeder
+hanya menjadi titik awal instalasi baru.
 
 Jangan mengandalkan filter di sisi frontend (Next.js) --- IDOR harus
 dicegah di query backend, sesuai AI_CODING_RULES.md ("Jangan percaya

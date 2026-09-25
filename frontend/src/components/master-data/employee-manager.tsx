@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { PageHeader } from '@/components/common/page-header';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { createEmployee, updateEmployee, updateEmployeeStatus, type Employee } from '@/lib/api/employees';
@@ -44,7 +45,30 @@ function emptyForm(units: Unit[], positions: Position[]): FormState {
   };
 }
 
-export function EmployeeManager({ employees, units, positions }: { employees: Employee[]; units: Unit[]; positions: Position[] }) {
+export function EmployeeManager({
+  employees,
+  units,
+  positions,
+  title = 'Pegawai',
+  canManage = true,
+  toolbar,
+  footer,
+  editableUnitId = null,
+}: {
+  employees: Employee[];
+  /** Units offered in the form; a unit-bound account passes only its own. */
+  units: Unit[];
+  positions: Position[];
+  title?: string;
+  canManage?: boolean;
+  /** Search/filter/import controls rendered under the header. */
+  toolbar?: React.ReactNode;
+  /** Pagination, rendered at the bottom of the table card. */
+  footer?: React.ReactNode;
+  /** A unit-bound account edits only its own unit's staff. */
+  editableUnitId?: number | null;
+}) {
+  const canEdit = (emp: Employee) => canManage && (editableUnitId === null || emp.unit?.id === editableUnitId);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -121,27 +145,26 @@ export function EmployeeManager({ employees, units, positions }: { employees: Em
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Pegawai</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Master data pegawai — guru, TU, tenaga kependidikan, dan panitia sekolah.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary hover:bg-primary-container text-white rounded-lg font-label-lg text-label-lg shadow-xs transition-all font-semibold"
-        >
-          <Icon name="person_add" className="text-base text-white" />
-          <span>Tambah Pegawai</span>
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Data Master' }, { label: title }]}
+        title={title}
+        description={<>Master data pegawai — guru, TU, tenaga kependidikan, dan panitia sekolah.</>}
+        actions={
+          canManage && (
+            <button type="button" onClick={openCreate} className="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-gold text-on-gold font-label-lg text-label-lg font-bold shadow-sm hover:brightness-105 transition">
+              <Icon name="person_add" className="text-base" />
+              <span>Tambah Pegawai</span>
+            </button>
+          )
+        }
+      />
+
+      {toolbar}
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {employees.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
-            Belum ada pegawai. Klik &quot;Tambah Pegawai&quot; untuk mulai.
+            Belum ada pegawai yang cocok. Tambahkan satu per satu, atau import sekaligus dari file Excel (CSV).
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
@@ -174,25 +197,27 @@ export function EmployeeManager({ employees, units, positions }: { employees: Em
                       </span>
                     </td>
                     <td className="px-space-base py-space-sm">
-                      <div className="flex items-center justify-center gap-space-2xs">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(emp)}
-                          title="Edit"
-                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                        >
-                          <Icon name="edit" className="text-[18px]" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === emp.id}
-                          onClick={() => toggleStatus(emp)}
-                          title={emp.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
-                          className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                        >
-                          <Icon name={emp.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                        </button>
-                      </div>
+                      {canEdit(emp) && (
+                        <div className="flex items-center justify-center gap-space-2xs">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(emp)}
+                            title="Edit"
+                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                          >
+                            <Icon name="edit" className="text-[18px]" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busyId === emp.id}
+                            onClick={() => toggleStatus(emp)}
+                            title={emp.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
+                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                          >
+                            <Icon name={emp.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -200,6 +225,7 @@ export function EmployeeManager({ employees, units, positions }: { employees: Em
             </table>
           </div>
         )}
+        {footer}
       </div>
 
       {open && (

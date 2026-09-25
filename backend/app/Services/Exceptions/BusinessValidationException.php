@@ -11,8 +11,15 @@ use RuntimeException;
  */
 class BusinessValidationException extends RuntimeException
 {
-    public function __construct(private readonly string $field, string $message)
-    {
+    /**
+     * @param  array<string, array<int, string>>  $details  extra per-item errors
+     *                                                      (e.g. one entry per CSV row)
+     */
+    public function __construct(
+        private readonly string $field,
+        string $message,
+        private readonly array $details = [],
+    ) {
         parent::__construct($message);
     }
 
@@ -21,6 +28,6 @@ class BusinessValidationException extends RuntimeException
      */
     public function errors(): array
     {
-        return [$this->field => [$this->getMessage()]];
+        return [$this->field => [$this->getMessage()]] + $this->details;
     }
 }

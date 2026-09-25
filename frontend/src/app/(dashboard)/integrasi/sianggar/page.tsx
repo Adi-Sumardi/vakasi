@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHeader } from '@/components/common/page-header';
 
 import { Unauthorized } from '@/components/layout/unauthorized';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
@@ -26,13 +27,11 @@ export default async function SianggarIntegrationPage() {
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Pengiriman ke Sianggar</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Kegiatan yang sudah disetujui tetapi datanya belum sampai ke menu Vakasi di Sianggar. Selama belum
-          terkirim, SDM tidak dapat mengunduh datanya untuk diajukan ke Sianggar.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Sistem' }, { label: 'Integrasi Sianggar' }]}
+        title={<>Pengiriman ke Sianggar</>}
+        description={<>Kegiatan yang sudah disetujui tetapi datanya belum sampai ke menu Vakasi di Sianggar. Selama belum terkirim, SDM tidak dapat mengunduh datanya untuk diajukan ke Sianggar.</>}
+      />
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {activities.length === 0 ? (

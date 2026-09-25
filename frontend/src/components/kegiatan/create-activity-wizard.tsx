@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { PageHeader } from '@/components/common/page-header';
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 import { formatRupiah } from '@/lib/format';
@@ -214,17 +215,13 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-xl">
-        <div className="flex flex-col gap-space-2xs">
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
-            Buat Pengajuan Kegiatan &amp; Honorarium
-          </h1>
-          {activityCode && (
-            <span className="px-space-sm py-space-2xs rounded-full bg-secondary-container text-on-secondary-fixed text-label-sm font-label-sm font-semibold w-fit">
-              DRAFT #{activityCode}
-            </span>
-          )}
-        </div>
+      <div className="mb-space-xl">
+        <PageHeader
+          breadcrumb={[{ label: 'Kegiatan', href: '/kegiatan' }, { label: 'Buat Kegiatan' }]}
+          eyebrow={activityCode ? `Draft ${activityCode}` : undefined}
+          title="Buat Kegiatan & Honorarium"
+          description="Isi informasi kegiatan, tambahkan panitia dan honornya, unggah SK Panitia, lalu ajukan ke Kepala Sekolah."
+        />
       </div>
 
       <div className="w-full bg-surface-container-lowest rounded-xl p-space-md mb-space-xl shadow-xs border border-outline-variant/30">

@@ -16,6 +16,8 @@ class RoleResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'permissions' => $this->whenLoaded('permissions', fn () => $this->permissions->pluck('name')->values()),
+            'users_count' => $this->whenCounted('users'),
         ];
     }
 }

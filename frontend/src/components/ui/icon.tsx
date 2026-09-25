@@ -1,6 +1,9 @@
 import React from 'react';
 import {
   AlertCircle,
+  BarChart3,
+  Filter,
+  History,
   ArrowLeftRight,
   ArrowRight,
   Ban,
@@ -134,6 +137,10 @@ const ICONS: Record<string, LucideIcon> = {
   price_check: CircleDollarSign,
   folder_open: FolderOpen,
   settings: Settings,
+  bar_chart: BarChart3,
+  history: History,
+  group: Users,
+  filter: Filter,
 };
 
 export interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, 'name' | 'fill'> {

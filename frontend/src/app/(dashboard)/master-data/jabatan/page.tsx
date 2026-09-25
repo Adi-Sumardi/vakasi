@@ -1,17 +1,6 @@
-import { SimpleMasterDataManager } from '@/components/master-data/simple-master-data-manager';
-import { listPositions } from '@/lib/api/master-data.server';
+import { redirect } from 'next/navigation';
 
-export default async function JabatanPage() {
-  const positions = await listPositions();
-
-  return (
-    <SimpleMasterDataManager
-      kind="position"
-      title="Jabatan"
-      subtitle="Master data jabatan pegawai sekolah."
-      emptyLabel="Belum ada jabatan."
-      addLabel="Tambah Jabatan"
-      items={positions}
-    />
-  );
+/** Menu digabung; tautan lama diarahkan ke halaman barunya. */
+export default function LegacyPage() {
+  redirect('/master-data/unit?tab=jabatan');
 }

@@ -4,17 +4,30 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { PageHeader } from '@/components/common/page-header';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
+import { ROLE_LABEL } from '@/lib/api/auth';
+import type { Unit } from '@/lib/api/master-data';
 import { createUser, updateUser, type AppUser, type Role } from '@/lib/api/users';
 
-type FormState = { name: string; email: string; password: string; role_id: number };
+type FormState = { name: string; email: string; password: string; role_id: number; unit_id: number | '' };
 
 function emptyForm(roles: Role[]): FormState {
-  return { name: '', email: '', password: '', role_id: roles[0]?.id ?? 0 };
+  return { name: '', email: '', password: '', role_id: roles[0]?.id ?? 0, unit_id: '' };
 }
 
-export function UserManager({ users, roles, currentUserId }: { users: AppUser[]; roles: Role[]; currentUserId: number }) {
+export function UserManager({
+  users,
+  roles,
+  units,
+  currentUserId,
+}: {
+  users: AppUser[];
+  roles: Role[];
+  units: Unit[];
+  currentUserId: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -30,7 +43,13 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
 
   function openEdit(user: AppUser) {
     setEditingId(user.id);
-    setForm({ name: user.name, email: user.email, password: '', role_id: user.role?.id ?? roles[0]?.id ?? 0 });
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role_id: user.role?.id ?? roles[0]?.id ?? 0,
+      unit_id: user.unit?.id ?? '',
+    });
     setOpen(true);
   }
 
@@ -43,11 +62,12 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
           name: form.name,
           email: form.email,
           role_id: Number(form.role_id),
+          unit_id: form.unit_id === '' ? null : Number(form.unit_id),
           ...(form.password ? { password: form.password } : {}),
         });
         toast.success('Pengguna berhasil diperbarui.');
       } else {
-        await createUser({ ...form, role_id: Number(form.role_id) });
+        await createUser({ ...form, role_id: Number(form.role_id), unit_id: form.unit_id === '' ? null : Number(form.unit_id) });
         toast.success('Pengguna berhasil dibuat.');
       }
       setOpen(false);
@@ -76,20 +96,17 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Pengaturan</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">Kelola pengguna dan hak akses sistem.</p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary hover:bg-primary-container text-white rounded-lg font-label-lg text-label-lg shadow-xs transition-all font-semibold"
-        >
-          <Icon name="person_add" className="text-base text-white" />
-          <span>Tambah Pengguna</span>
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Sistem' }, { label: 'Pengguna' }]}
+        title="Pengguna"
+        description={<>Akun, peran, dan unit. Akun dengan unit hanya melihat data unit itu; kosongkan unit untuk akses seluruh yayasan.</>}
+        actions={
+          <button type="button" onClick={openCreate} className="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-gold text-on-gold font-label-lg text-label-lg font-bold shadow-sm hover:brightness-105 transition">
+            <Icon name="person_add" className="text-base" />
+            <span>Tambah Pengguna</span>
+          </button>
+        }
+      />
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {users.length === 0 ? (
@@ -102,6 +119,7 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
                   <th className="px-space-base py-space-sm font-bold">Nama</th>
                   <th className="px-space-base py-space-sm font-bold">Email</th>
                   <th className="px-space-base py-space-sm font-bold">Peran</th>
+                  <th className="px-space-base py-space-sm font-bold">Unit</th>
                   <th className="px-space-base py-space-sm font-bold">Login Terakhir</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Status</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Aksi</th>
@@ -119,9 +137,10 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
                     <td className="px-space-base py-space-sm text-on-surface-variant">{u.email}</td>
                     <td className="px-space-base py-space-sm">
                       <span className="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-semibold">
-                        {u.role?.name ?? '—'}
+                        {u.role ? (ROLE_LABEL[u.role.name] ?? u.role.name) : '—'}
                       </span>
                     </td>
+                    <td className="px-space-base py-space-sm text-on-surface-variant">{u.unit?.name ?? 'Semua unit'}</td>
                     <td className="px-space-base py-space-sm text-on-surface-variant font-mono text-xs">{u.last_login_at ?? 'Belum pernah'}</td>
                     <td className="px-space-base py-space-sm text-center">
                       <span className="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold">
@@ -208,8 +227,22 @@ export function UserManager({ users, roles, currentUserId }: { users: AppUser[];
                   onChange={(e) => setForm({ ...form, role_id: Number(e.target.value) })}
                   className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
                 >
-                  {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  {roles.map((r) => <option key={r.id} value={r.id}>{ROLE_LABEL[r.name] ?? r.name}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Unit</label>
+                <select
+                  value={form.unit_id}
+                  onChange={(e) => setForm({ ...form, unit_id: e.target.value === '' ? '' : Number(e.target.value) })}
+                  className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
+                >
+                  <option value="">Semua unit (tingkat yayasan)</option>
+                  {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+                <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+                  Wajib diisi untuk TU dan Kepala Sekolah, supaya mereka hanya melihat dan menyetujui kegiatan sekolahnya.
+                </p>
               </div>
               <div className="pt-space-sm flex items-center justify-end gap-2">
                 <button

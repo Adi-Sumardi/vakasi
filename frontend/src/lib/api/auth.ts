@@ -6,7 +6,13 @@ export type AuthUser = {
   name: string;
   email: string;
   status: string;
+  employee_id?: number | null;
+  unit_id?: number | null;
   role: { id: number; name: string } | null;
+  /** Unit akun; null = seluruh unit. */
+  unit?: { id: number; name: string } | null;
+  /** Unit yang membatasi data akun ini (null untuk Super Admin / akun tanpa unit). */
+  scoped_unit_id?: number | null;
   permissions: string[];
   last_login_at: string | null;
 };
@@ -53,3 +59,19 @@ export function me(): Promise<AuthUser> {
 export function hasPermission(user: AuthUser | null, permission: string): boolean {
   return user?.permissions.includes(permission) ?? false;
 }
+
+export function hasRole(user: AuthUser | null, ...roles: string[]): boolean {
+  return !!user?.role && roles.includes(user.role.name);
+}
+
+export const ROLE_LABEL: Record<string, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  tu: 'TU',
+  kepala_sekolah: 'Kepala Sekolah',
+  keuangan: 'Keuangan',
+  guru_tendik: 'Guru/Tendik',
+  auditor: 'Auditor',
+};
+
+export const roleLabel = (user: AuthUser | null) => (user?.role ? (ROLE_LABEL[user.role.name] ?? user.role.name) : '');

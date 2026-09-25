@@ -6,7 +6,17 @@ import { toast } from 'sonner';
 
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
+import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { pushActivityToSianggar, SIANGGAR_STATUS_LABEL, type Activity } from '@/lib/api/activities';
+
+const EVENT_LABEL: Record<string, string> = {
+  'intake.revision_requested': 'SDM meminta revisi',
+  'intake.rejected': 'Ditolak SDM',
+  'pengajuan.created': 'Pengajuan pencairan dibuat',
+  'pengajuan.stage_changed': 'Pindah tahap approval',
+  'pengajuan.paid': 'Honor dibayar',
+  'pengajuan.rejected': 'Pengajuan ditolak',
+};
 
 const TONE: Record<string, { box: string; icon: string; iconName: string }> = {
   sent: { box: 'bg-tertiary-fixed border-tertiary/30', icon: 'text-tertiary', iconName: 'cloud_done' },
@@ -67,6 +77,26 @@ export function SianggarHandoffCard({
       <dl className="grid grid-cols-[auto_1fr] gap-x-space-md gap-y-space-2xs font-body-sm text-body-sm">
         <dt className="text-on-surface-variant">Status</dt>
         <dd className="text-on-surface font-semibold">{SIANGGAR_STATUS_LABEL[status] ?? status}</dd>
+        {activity.disbursement_state && (
+          <>
+            <dt className="text-on-surface-variant">Pencairan</dt>
+            <dd>
+              <StatusBadge status={activity.disbursement_state} />
+            </dd>
+          </>
+        )}
+        {activity.disbursement?.nomor_pengajuan && (
+          <>
+            <dt className="text-on-surface-variant">No. Pengajuan</dt>
+            <dd className="text-on-surface font-medium">{activity.disbursement.nomor_pengajuan}</dd>
+          </>
+        )}
+        {activity.disbursement?.no_voucher && (
+          <>
+            <dt className="text-on-surface-variant">Voucher</dt>
+            <dd className="text-on-surface font-medium">{activity.disbursement.no_voucher}</dd>
+          </>
+        )}
         {activity.sianggar_synced_at && (
           <>
             <dt className="text-on-surface-variant">Terkirim</dt>
@@ -76,6 +106,21 @@ export function SianggarHandoffCard({
           </>
         )}
       </dl>
+
+      {(activity.disbursement?.events?.length ?? 0) > 0 && (
+        <ol className="flex flex-col gap-space-xs border-l-2 border-outline-variant/60 pl-space-md mt-space-2xs">
+          {activity.disbursement!.events!.map((event, index) => (
+            <li key={`${event.occurred_at}-${index}`} className="font-body-sm text-body-sm">
+              <div className="text-on-surface font-medium">{EVENT_LABEL[event.event_type] ?? event.event_type}</div>
+              <div className="text-on-surface-variant text-xs">
+                {new Date(event.occurred_at).toLocaleString('id-ID')}
+                {event.actor_name ? ` · ${event.actor_name}` : ''}
+              </div>
+              {event.note && <div className="text-on-surface-variant">{event.note}</div>}
+            </li>
+          ))}
+        </ol>
+      )}
 
       {activity.sianggar_last_error && (
         <p className="font-body-sm text-body-sm text-on-error-container break-words">

@@ -22,6 +22,8 @@ class UpdateUserRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'password' => ['sometimes', 'string', 'min:8'],
+            // Kosong = akun berlaku untuk seluruh unit.
+            'unit_id' => ['nullable', 'exists:units,id'],
             'role_id' => [
                 'sometimes',
                 'exists:roles,id',

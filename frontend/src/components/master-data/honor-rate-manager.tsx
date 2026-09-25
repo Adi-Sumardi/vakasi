@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { PageHeader } from '@/components/common/page-header';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import {
@@ -39,7 +40,20 @@ function emptyForm(honorTypes: HonorType[]): FormState {
   };
 }
 
-export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRate[]; honorTypes: HonorType[]; units: Unit[] }) {
+export function HonorRateManager({
+  rates,
+  honorTypes,
+  units,
+  canManage = true,
+  tabs,
+}: {
+  rates: HonorRate[];
+  honorTypes: HonorType[];
+  units: Unit[];
+  /** False for roles that may only read the tariff (e.g. TU). */
+  canManage?: boolean;
+  tabs?: React.ReactNode;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -139,23 +153,20 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
         onChange={handleRowUpload}
         className="hidden"
       />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Tarif Honor</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Tarif per jenis honor sesuai SK Yayasan yang berlaku. Perubahan tarif tidak mengubah honor yang sudah
-            dihitung.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary hover:bg-primary-container text-white rounded-lg font-label-lg text-label-lg shadow-xs transition-all font-semibold self-start"
-        >
-          <Icon name="add" className="text-base text-white" />
-          <span>Tambah Tarif Honor</span>
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Data Master' }, { label: 'Honor & Tarif' }]}
+        title="Tarif Honor"
+        description={<>Tarif per jenis honor sesuai SK Yayasan yang berlaku. Perubahan tarif tidak mengubah honor yang sudah dihitung.</>}
+        actions={
+          canManage && (
+            <button type="button" onClick={openCreate} className="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-gold text-on-gold font-label-lg text-label-lg font-bold shadow-sm hover:brightness-105 transition">
+              <Icon name="add" className="text-base" />
+              <span>Tambah Tarif Honor</span>
+            </button>
+          )
+        }
+      />
+      {tabs}
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {rates.length === 0 ? (
@@ -171,7 +182,7 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                   <th className="px-space-base py-space-sm font-bold">Dasar SK</th>
                   <th className="px-space-base py-space-sm font-bold">Berlaku</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Status</th>
-                  <th className="px-space-base py-space-sm text-center font-bold">Aksi</th>
+                  {canManage && <th className="px-space-base py-space-sm text-center font-bold">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-low">
@@ -209,39 +220,41 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                         {r.status === 'active' ? 'Aktif' : 'Nonaktif'}
                       </span>
                     </td>
-                    <td className="px-space-base py-space-sm">
-                      <div className="flex items-center justify-center gap-space-2xs">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(r)}
-                          title="Edit"
-                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
-                        >
-                          <Icon name="edit" className="text-[18px]" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === r.id}
-                          onClick={() => {
-                            uploadTarget.current = r.id;
-                            rowFileInput.current?.click();
-                          }}
-                          title="Unggah berkas SK tarif"
-                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors disabled:opacity-50"
-                        >
-                          <Icon name="upload_file" className="text-[18px]" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === r.id}
-                          onClick={() => toggleStatus(r)}
-                          title={r.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
-                          className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
-                        >
-                          <Icon name={r.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
-                        </button>
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td className="px-space-base py-space-sm">
+                        <div className="flex items-center justify-center gap-space-2xs">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(r)}
+                            title="Edit"
+                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
+                          >
+                            <Icon name="edit" className="text-[18px]" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busyId === r.id}
+                            onClick={() => {
+                              uploadTarget.current = r.id;
+                              rowFileInput.current?.click();
+                            }}
+                            title="Unggah berkas SK tarif"
+                            className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors disabled:opacity-50"
+                          >
+                            <Icon name="upload_file" className="text-[18px]" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busyId === r.id}
+                            onClick={() => toggleStatus(r)}
+                            title={r.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
+                            className="p-1.5 rounded text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
+                          >
+                            <Icon name={r.status === 'active' ? 'block' : 'restart_alt'} className="text-[18px]" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -21,7 +21,7 @@ class FundSourceController extends Controller
             ->when($request->string('search')->toString(), fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
             ->when($request->string('status')->toString(), fn ($q, $status) => $q->where('status', $status))
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(FundSourceResource::collection($sources));
     }

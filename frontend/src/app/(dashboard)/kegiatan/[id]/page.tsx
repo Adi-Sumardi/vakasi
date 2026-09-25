@@ -1,9 +1,10 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { Icon } from '@/components/ui/icon';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { ActivityActions } from '@/components/kegiatan/activity-actions';
+import { ApprovalReviewPanel } from '@/components/kegiatan/approval-review-panel';
+import { HeroStat, PageHeader } from '@/components/common/page-header';
 import { ActivityDocuments } from '@/components/kegiatan/activity-documents';
 import { EditActivityDialog } from '@/components/kegiatan/edit-activity-dialog';
 import { RecalculateHonorDialog } from '@/components/kegiatan/recalculate-honor-dialog';
@@ -31,37 +32,52 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
   const canApprove = hasPermission(user, 'activities.approve');
   const canManageIntegration = hasPermission(user, 'integration.manage');
   const canManage = hasPermission(user, 'activities.update');
+  // Mirrors ActivityPolicy::update(): the creator, any TU of the same
+  // unit (a unit's kegiatan belongs to the school), or an Admin whose
+  // scope covers the unit.
+  const role = user.role?.name ?? '';
+  const scopedUnitId = user.scoped_unit_id ?? null;
+  const inScope = scopedUnitId === null || activity.unit.id === scopedUnitId;
+  const isEditable = ['draft', 'rejected'].includes(activity.status);
   const canEditInfo =
-    canManage && (isOwner || user.role?.name === 'admin' || user.role?.name === 'super_admin') &&
-    ['draft', 'rejected'].includes(activity.status);
-  const canUploadDocument = canEditInfo;
+    canManage &&
+    isEditable &&
+    (isOwner || (role === 'tu' && scopedUnitId !== null && inScope) || (['admin', 'super_admin'].includes(role) && inScope));
+  const canUploadDocument = canEditInfo || (['admin', 'super_admin', 'keuangan'].includes(role) && inScope && hasPermission(user, 'documents.manage'));
   // Honor may only be (re)calculated while the activity is still editable —
   // once approved it is a financial snapshot (BR-03). Keuangan holds the
   // permission too, without owning the activity.
   const canRecalculateHonor =
-    hasPermission(user, 'honors.calculate') &&
-    ['draft', 'rejected'].includes(activity.status) &&
-    (isOwner || ['admin', 'super_admin', 'keuangan'].includes(user.role?.name ?? ''));
+    hasPermission(user, 'honors.calculate') && isEditable && (canEditInfo || (role === 'keuangan' && inScope));
+  // Kepala Sekolah decides from a dedicated panel; the creator never
+  // approves their own submission (separation of duties).
+  const showReview = canApprove && activity.status === 'submitted' && !isOwner && inScope;
+  const honorTotal = (activity.honor_details ?? []).reduce((sum, d) => sum + d.net_amount, 0);
+  const unitChoices = scopedUnitId ? units.filter((u) => u.id === scopedUnitId) : activeOrCurrent(units, activity.unit.id);
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <nav className="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
-        <Link href="/kegiatan" className="hover:text-primary transition-colors">Kegiatan</Link>
-        <Icon name="chevron_right" className="text-xs text-outline" />
-        <span className="text-on-surface font-semibold">{activity.activity_code}</span>
-      </nav>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-          <div className="flex items-center gap-space-sm mb-space-2xs">
-            <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">{activity.name}</h1>
+      <PageHeader
+        breadcrumb={[{ label: 'Kegiatan', href: '/kegiatan' }, { label: activity.activity_code }]}
+        title={activity.name}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-space-sm">
             <StatusBadge status={activity.status} />
-          </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {activity.activity_code} &bull; {activity.unit?.name} &bull; {activity.activity_type?.name}
-          </p>
+            <span>
+              {activity.activity_code} · {activity.unit?.name} · {activity.activity_type?.name}
+            </span>
+          </span>
+        }
+      >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-sm">
+          <HeroStat label="Anggaran" value={formatRupiah(activity.budget_amount)} />
+          <HeroStat label="Total honor" value={formatRupiah(honorTotal)} />
+          <HeroStat label="Panitia" value={`${activity.members?.length ?? 0} orang`} />
+          <HeroStat label="Jadwal" value={activity.start_date} hint={activity.end_date !== activity.start_date ? `s/d ${activity.end_date}` : undefined} />
         </div>
-      </div>
+      </PageHeader>
+
+      {showReview && <ApprovalReviewPanel activity={activity} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
         <div className="lg:col-span-2 flex flex-col gap-space-lg">
@@ -72,7 +88,7 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                 <EditActivityDialog
                   activity={activity}
                   activityTypes={activeOrCurrent(activityTypes, activity.activity_type.id)}
-                  units={activeOrCurrent(units, activity.unit.id)}
+                  units={unitChoices}
                   fundSources={activeOrCurrent(fundSources, activity.fund_source.id)}
                 />
               )}
@@ -227,9 +243,9 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
 
           <ActivityActions
             activity={activity}
-            isOwner={isOwner}
+            isOwner={isOwner || canEditInfo}
             canSubmit={canSubmit}
-            canApprove={canApprove}
+            canApprove={false}
             canManage={canManage}
           />
         </div>

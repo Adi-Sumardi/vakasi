@@ -17,7 +17,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { ChangePasswordDialog } from '@/components/layout/change-password-dialog';
 import type { AuthUser } from '@/lib/api/auth';
-import { logout } from '@/lib/api/auth';
+import { roleLabel, logout } from '@/lib/api/auth';
 
 function initials(name: string) {
   return name
@@ -54,7 +54,7 @@ export function UserMenu({ user }: { user: AuthUser }) {
               </Avatar>
               <div className="hidden text-left sm:flex flex-col leading-tight">
                 <span className="font-label-md text-label-md text-on-surface font-semibold">{user.name}</span>
-                <span className="font-label-sm text-label-sm text-on-surface-variant font-normal">{user.role?.name ?? 'Staf Tata Usaha'}</span>
+                <span className="font-label-sm text-label-sm text-on-surface-variant font-normal">{roleLabel(user)}{user.scoped_unit_id && user.unit ? ` · ${user.unit.name}` : ''}</span>
               </div>
               <Icon name="expand_more" className="text-outline text-base" />
             </Button>

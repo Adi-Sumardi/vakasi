@@ -16,16 +16,18 @@ class ActivityPolicy
 {
     public function view(User $user, Activity $activity): bool
     {
-        if ($user->hasRole('super_admin', 'admin', 'kepala_sekolah', 'keuangan', 'auditor')) {
-            return true;
-        }
+        return Activity::query()->whereKey($activity->id)->visibleTo($user)->exists();
+    }
 
-        if ($user->hasRole('tu')) {
-            return $activity->created_by === $user->id;
-        }
+    /**
+     * A unit-scoped account only reaches its own unit's activities; an
+     * unscoped one (Super Admin, yayasan-level Admin) reaches all.
+     */
+    private function inScope(User $user, Activity $activity): bool
+    {
+        $unitId = $user->scopedUnitId();
 
-        return $user->employee_id !== null
-            && $activity->members()->where('employee_id', $user->employee_id)->exists();
+        return $unitId === null || $activity->unit_id === $unitId;
     }
 
     public function update(User $user, Activity $activity): bool
@@ -34,7 +36,17 @@ class ActivityPolicy
             return false;
         }
 
-        return $user->hasRole('super_admin', 'admin') || $activity->created_by === $user->id;
+        if ($activity->created_by === $user->id) {
+            return true;
+        }
+
+        // Any TU of the unit may carry on a colleague's draft; with a
+        // unit, the kegiatan belongs to the school, not to one account.
+        if ($user->hasRole('tu')) {
+            return $user->scopedUnitId() !== null && $this->inScope($user, $activity);
+        }
+
+        return $user->hasRole('super_admin', 'admin') && $this->inScope($user, $activity);
     }
 
     public function submit(User $user, Activity $activity): bool
@@ -55,7 +67,12 @@ class ActivityPolicy
             return false;
         }
 
-        return $user->hasRole('super_admin', 'admin', 'keuangan') || $activity->created_by === $user->id;
+        if ($activity->created_by === $user->id) {
+            return true;
+        }
+
+        return $this->update($user, $activity)
+            || ($user->hasRole('super_admin', 'admin', 'keuangan') && $this->inScope($user, $activity));
     }
 
     /**
@@ -65,7 +82,7 @@ class ActivityPolicy
      */
     public function uploadDocument(User $user, Activity $activity): bool
     {
-        if ($user->hasRole('super_admin', 'admin', 'keuangan')) {
+        if ($user->hasRole('super_admin', 'admin', 'keuangan') && $this->inScope($user, $activity)) {
             return true;
         }
 
@@ -74,7 +91,10 @@ class ActivityPolicy
 
     public function approve(User $user, Activity $activity): bool
     {
-        return $activity->status === Activity::SUBMITTED && $activity->created_by !== $user->id;
+        // A Kepala Sekolah tied to a unit approves only that school.
+        return $activity->status === Activity::SUBMITTED
+            && $activity->created_by !== $user->id
+            && $this->inScope($user, $activity);
     }
 
     public function delete(User $user, Activity $activity): bool

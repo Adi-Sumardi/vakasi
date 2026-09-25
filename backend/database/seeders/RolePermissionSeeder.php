@@ -44,7 +44,9 @@ class RolePermissionSeeder extends Seeder
         'activities.approve' => ['activities', 'approve', ['super_admin', 'kepala_sekolah']],
 
         'honor-rates.view' => ['honor-rates', 'view', ['super_admin', 'admin', 'tu', 'kepala_sekolah', 'keuangan', 'auditor']],
-        'honor-rates.manage' => ['honor-rates', 'manage', ['super_admin', 'admin', 'tu']],
+        // Tarif ditetapkan SK Yayasan; TU yang mengajukan honor tidak ikut
+        // mengubahnya.
+        'honor-rates.manage' => ['honor-rates', 'manage', ['super_admin', 'admin']],
         'honors.calculate' => ['honors', 'calculate', ['super_admin', 'admin', 'tu', 'keuangan']],
 
         'budget.view' => ['budget', 'view', ['super_admin', 'admin', 'tu', 'kepala_sekolah', 'keuangan', 'auditor']],
@@ -65,6 +67,15 @@ class RolePermissionSeeder extends Seeder
         'audit.view' => ['audit', 'view', ['super_admin', 'admin', 'kepala_sekolah', 'keuangan', 'auditor']],
 
         'users.manage' => ['users', 'manage', ['super_admin', 'admin']],
+
+        // Unit, jabatan, jenis kegiatan, sumber dana.
+        'master-data.manage' => ['master-data', 'manage', ['super_admin', 'admin']],
+
+        // Mengubah hak akses per role - cukup Super Admin.
+        'roles.manage' => ['roles', 'manage', ['super_admin']],
+
+        // Menu "Honor Saya" untuk pegawai yang punya akun.
+        'my-honors.view' => ['my-honors', 'view', ['guru_tendik']],
     ];
 
     public function run(): void

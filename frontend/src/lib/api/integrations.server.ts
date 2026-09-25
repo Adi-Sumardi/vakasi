@@ -7,4 +7,4 @@ import type { Activity } from '@/lib/api/activities';
  * configured yet (FLOW.md section 8).
  */
 export const listPendingSianggarHandoffs = () =>
-  serverApiFetch<Activity[]>('/api/v1/integrations/sianggar/pending');
+  serverApiFetch<Activity[]>('/api/v1/integrations/sianggar/pending?per_page=200');

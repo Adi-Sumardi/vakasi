@@ -17,7 +17,17 @@ class StoreEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'unit_id' => ['required', 'exists:units,id'],
+            'unit_id' => [
+                'required',
+                'exists:units,id',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $unitId = $this->user()?->scopedUnitId();
+
+                    if ($unitId !== null && (int) $value !== $unitId) {
+                        $fail('Anda hanya dapat mengelola pegawai di unit Anda sendiri.');
+                    }
+                },
+            ],
             'position_id' => ['required', 'exists:positions,id'],
             'employee_code' => ['required', 'string', 'max:50', 'unique:employees,employee_code'],
             'nip' => ['nullable', 'string', 'max:50'],

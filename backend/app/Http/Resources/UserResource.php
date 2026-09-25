@@ -19,10 +19,18 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'status' => $this->status,
+            'employee_id' => $this->employee_id,
+            'unit_id' => $this->unit_id,
             'role' => $this->whenLoaded('role', fn () => [
                 'id' => $this->role->id,
                 'name' => $this->role->name,
             ]),
+            // null = seluruh unit (yayasan).
+            'unit' => $this->whenLoaded('unit', fn () => $this->unit ? [
+                'id' => $this->unit->id,
+                'name' => $this->unit->name,
+            ] : null),
+            'scoped_unit_id' => $this->scopedUnitId(),
             'permissions' => $this->whenLoaded('role', fn () => $this->role
                 ?->permissions
                 ->pluck('name')

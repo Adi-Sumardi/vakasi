@@ -39,6 +39,13 @@ class ActivityResource extends JsonResource
             'sianggar_status' => $this->sianggar_status,
             'sianggar_synced_at' => $this->sianggar_synced_at,
             'sianggar_last_error' => $this->sianggar_last_error,
+            // Only computed when the caller loaded the mirror, so a plain
+            // list does not trigger a query per row.
+            'disbursement_state' => $this->when(
+                $this->relationLoaded('disbursement'),
+                fn () => $this->disbursementState(),
+            ),
+            'disbursement' => new ActivityDisbursementResource($this->whenLoaded('disbursement')),
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,
@@ -48,6 +55,17 @@ class ActivityResource extends JsonResource
             'honor_details' => HonorDetailResource::collection($this->whenLoaded('honorDetails')),
             'approvals' => ApprovalResource::collection($this->whenLoaded('approvals')),
             'documents' => DocumentResource::collection($this->whenLoaded('documents')),
+            // Aggregates, only present when the query asked for them
+            // (e.g. the approval queue).
+            'members_count' => $this->whenCounted('members'),
+            'honor_total' => $this->when(
+                array_key_exists('honor_total', $this->resource->getAttributes()),
+                fn () => (int) $this->honor_total,
+            ),
+            'has_sk_panitia' => $this->when(
+                array_key_exists('has_sk_panitia', $this->resource->getAttributes()),
+                fn () => (bool) $this->has_sk_panitia,
+            ),
             'created_at' => $this->created_at,
         ];
     }

@@ -9,6 +9,7 @@ use App\Http\Requests\Approval\RejectActivityRequest;
 use App\Http\Resources\ActivityResource;
 use App\Http\Resources\ApprovalResource;
 use App\Models\Activity;
+use App\Models\Document;
 use App\Services\ApprovalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,9 +24,16 @@ class ApprovalController extends Controller
     {
         $approvals = Activity::query()
             ->where('status', Activity::SUBMITTED)
-            ->with(['activityType', 'unit', 'creator', 'approvals'])
-            ->latest('submitted_at')
-            ->paginate(20);
+            ->visibleTo($request->user())
+            ->with(['activityType', 'unit', 'fundSource', 'creator', 'approvals'])
+            // What Kepala Sekolah needs to triage the queue without
+            // opening each activity.
+            ->withCount('members')
+            ->withSum('honorDetails as honor_total', 'net_amount')
+            ->withExists(['documents as has_sk_panitia' => fn ($q) => $q->where('document_type', Document::SK_PANITIA)])
+            // Oldest first: the queue is worked in the order it arrived.
+            ->oldest('submitted_at')
+            ->paginate($this->perPage($request));
 
         return $this->success(ActivityResource::collection($approvals));
     }

@@ -51,6 +51,21 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 type ApiFetchOptions = Omit<RequestInit, 'body'> & { body?: unknown };
 
+/** Total rows of a paginated list, read from its meta (e.g. a badge count). */
+export async function apiFetchTotal(path: string): Promise<number> {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
+  const json = (await response.json().catch(() => null)) as { meta?: { total?: number }; data?: unknown[] } | null;
+
+  if (!response.ok || !json) {
+    return 0;
+  }
+
+  return json.meta?.total ?? json.data?.length ?? 0;
+}
+
 /**
  * Fetch wrapper for Client Components. Always sends cookies
  * (`credentials: 'include'`) and, for non-GET requests, attaches the

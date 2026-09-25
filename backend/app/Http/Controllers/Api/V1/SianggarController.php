@@ -10,6 +10,7 @@ use App\Models\Activity;
 use App\Services\Exceptions\BusinessValidationException;
 use App\Services\SianggarService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Operational control over the handoff to Sianggar (FLOW.md section 8).
@@ -26,14 +27,14 @@ class SianggarController extends Controller
     /**
      * Activities whose handoff still needs attention.
      */
-    public function pending(): JsonResponse
+    public function pending(Request $request): JsonResponse
     {
         $activities = Activity::query()
             ->where('status', Activity::APPROVED)
             ->whereIn('sianggar_status', [Activity::SIANGGAR_PENDING, Activity::SIANGGAR_FAILED, Activity::SIANGGAR_SKIPPED])
             ->with(['activityType', 'unit', 'fundSource', 'creator'])
             ->latest('approved_at')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(ActivityResource::collection($activities));
     }

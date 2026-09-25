@@ -9,8 +9,10 @@ use App\Http\Requests\Employee\UpdateEmployeeRequest;
 use App\Http\Requests\Employee\UpdateEmployeeStatusRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
+use App\Services\EmployeeImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class EmployeeController extends Controller
 {
@@ -38,7 +40,7 @@ class EmployeeController extends Controller
                 $q2->where('name', 'like', "%{$search}%")->orWhere('employee_code', 'like', "%{$search}%");
             }))
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(EmployeeResource::collection($employees));
     }
@@ -63,6 +65,8 @@ class EmployeeController extends Controller
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): JsonResponse
     {
+        $this->ensureInUnit($request, $employee);
+
         $employee->update($request->validated());
 
         return $this->success(new EmployeeResource($employee->load(['unit', 'position'])), 'Pegawai berhasil diperbarui.');
@@ -70,8 +74,48 @@ class EmployeeController extends Controller
 
     public function updateStatus(UpdateEmployeeStatusRequest $request, Employee $employee): JsonResponse
     {
+        $this->ensureInUnit($request, $employee);
+
         $employee->update($request->validated());
 
         return $this->success(new EmployeeResource($employee), 'Status pegawai berhasil diperbarui.');
+    }
+
+    /**
+     * CSV template with the exact header the importer expects.
+     */
+    public function importTemplate(EmployeeImportService $importer): Response
+    {
+        return response($importer->template(), 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template-import-pegawai.csv"',
+        ]);
+    }
+
+    public function import(Request $request, EmployeeImportService $importer): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $result = $importer->import($request->file('file')->get(), $request->user());
+
+        return $this->success(
+            $result,
+            "Import selesai: {$result['created']} pegawai baru, {$result['updated']} diperbarui.",
+        );
+    }
+
+    /**
+     * A unit-scoped account may pick any employee as panitia, but only
+     * maintains the records of its own unit's staff.
+     */
+    private function ensureInUnit(Request $request, Employee $employee): void
+    {
+        $unitId = $request->user()->scopedUnitId();
+
+        if ($unitId !== null && $employee->unit_id !== $unitId) {
+            abort(403, 'Anda hanya dapat mengelola pegawai di unit Anda sendiri.');
+        }
     }
 }

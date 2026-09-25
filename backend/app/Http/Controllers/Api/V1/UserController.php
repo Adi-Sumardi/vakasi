@@ -22,7 +22,7 @@ class UserController extends Controller
 
     public function index(): JsonResponse
     {
-        $users = User::query()->with('role')->orderBy('name')->get();
+        $users = User::query()->with(['role', 'unit'])->orderBy('name')->get();
 
         return $this->success(UserResource::collection($users));
     }
@@ -37,7 +37,7 @@ class UserController extends Controller
 
         $this->auditService->logModel('user.created', $user, newValues: $user->only(['name', 'email', 'role_id', 'status']));
 
-        return $this->success(new UserResource($user->load('role')), 'Pengguna berhasil dibuat.', 201);
+        return $this->success(new UserResource($user->load(['role', 'unit'])), 'Pengguna berhasil dibuat.', 201);
     }
 
     /**
@@ -72,7 +72,7 @@ class UserController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
-        $old = $user->only(['name', 'email', 'role_id', 'status']);
+        $old = $user->only(['name', 'email', 'role_id', 'unit_id', 'status']);
 
         $user->update($data);
 
@@ -84,7 +84,7 @@ class UserController extends Controller
             array_diff_key($data, ['password' => null]) + (isset($data['password']) ? ['password' => '[redacted]'] : []),
         );
 
-        return $this->success(new UserResource($user->load('role')), 'Pengguna berhasil diperbarui.');
+        return $this->success(new UserResource($user->load(['role', 'unit'])), 'Pengguna berhasil diperbarui.');
     }
 
     public function roles(): JsonResponse

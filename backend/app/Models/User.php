@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role_id', 'employee_id', 'status'])]
+#[Fillable(['name', 'email', 'password', 'role_id', 'employee_id', 'unit_id', 'status'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -40,6 +40,26 @@ class User extends Authenticatable
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /** @return BelongsTo<Unit, $this> */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    /**
+     * The unit this account is limited to, or null for yayasan-wide
+     * access. Super Admin is never limited, so a mis-set unit cannot
+     * lock the instance's owner out of the other schools.
+     */
+    public function scopedUnitId(): ?int
+    {
+        if ($this->hasRole('super_admin')) {
+            return null;
+        }
+
+        return $this->unit_id;
     }
 
     /** @return BelongsTo<Employee, $this> */

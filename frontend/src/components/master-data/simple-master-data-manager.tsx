@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { PageHeader } from '@/components/common/page-header';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import {
@@ -55,6 +56,8 @@ type Props = {
   /** For HonorType's "satuan" (JAM/HARI/PAKET/...) field. */
   extraField?: { key: 'unit'; label: string; placeholder: string };
   kind: keyof typeof CREATORS;
+  /** Tabs of a combined master-data page, shown above the title. */
+  tabs?: React.ReactNode;
 };
 
 type FormState = { code: string; name: string; description: string; unit: string };
@@ -70,6 +73,7 @@ export function SimpleMasterDataManager({
   hasDescription,
   extraField,
   kind,
+  tabs,
 }: Props) {
   const router = useRouter();
   const create = CREATORS[kind] as (input: SimpleMasterDataInput) => Promise<unknown>;
@@ -141,20 +145,18 @@ export function SimpleMasterDataManager({
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">{title}</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">{subtitle}</p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary hover:bg-primary-container text-white rounded-lg font-label-lg text-label-lg shadow-xs transition-all font-semibold self-start"
-        >
-          <Icon name="add" className="text-base text-white" />
-          <span>{addLabel}</span>
-        </button>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Data Master' }, { label: title }]}
+        title={title}
+        description={<>{subtitle}</>}
+        actions={
+          <button type="button" onClick={openCreate} className="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-gold text-on-gold font-label-lg text-label-lg font-bold shadow-sm hover:brightness-105 transition">
+            <Icon name="add" className="text-base" />
+            <span>{addLabel}</span>
+          </button>
+        }
+      />
+      {tabs}
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {items.length === 0 ? (

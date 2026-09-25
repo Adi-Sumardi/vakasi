@@ -11,6 +11,13 @@
  * those files if the mockups are ever updated.
  */
 @theme inline {
+  /* Brand accents for the navy/gold identity (sidebar, page heroes). */
+  --color-navy: var(--brand-navy);
+  --color-navy-deep: var(--brand-navy-deep);
+  --color-navy-bright: var(--brand-navy-bright);
+  --color-gold: var(--brand-gold);
+  --color-gold-soft: var(--brand-gold-soft);
+  --color-on-gold: var(--brand-on-gold);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
@@ -118,6 +125,14 @@
 }
 
 :root {
+  /* Navy + gold: the yayasan's identity, shared with Sianggar's banners. */
+  --brand-navy: #0f2f7a;
+  --brand-navy-deep: #0a1f52;
+  --brand-navy-bright: #1d4ed8;
+  --brand-gold: #f2b233;
+  --brand-gold-soft: #fff1d1;
+  --brand-on-gold: #3d2800;
+
   /* VAKASI "Modern Institutional Precision" theme (mockup DESIGN.md). */
   --surface: #f8f9ff;
   --surface-dim: #cbdbf5;
@@ -189,17 +204,24 @@
   --chart-4: oklch(0.6 0.22 300);
   --chart-5: oklch(0.6 0.22 20);
   --radius: 0.25rem;
-  --sidebar: var(--surface-container-lowest);
-  --sidebar-foreground: var(--on-surface);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: var(--surface-container-low);
-  --sidebar-accent-foreground: var(--on-surface);
-  --sidebar-border: var(--outline-variant);
+  /* Navy sidebar (menu redesign): white text, gold marks the active item. */
+  --sidebar: var(--brand-navy-deep);
+  --sidebar-foreground: rgb(255 255 255 / 0.86);
+  --sidebar-primary: var(--brand-gold);
+  --sidebar-primary-foreground: var(--brand-on-gold);
+  --sidebar-accent: rgb(255 255 255 / 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.1);
   --sidebar-ring: var(--ring);
 }
 
 .dark {
+  --brand-navy: #0c2461;
+  --brand-navy-deep: #07163d;
+  --brand-navy-bright: #3b6cf0;
+  --brand-gold: #f5c35a;
+  --brand-gold-soft: #3b2e12;
+  --brand-on-gold: #fff4dc;
   --surface: oklch(0.19 0.03 260);
   --surface-dim: oklch(0.15 0.03 260);
   --surface-bright: oklch(0.3 0.03 260);
@@ -388,4 +410,45 @@
 @utility text-body-sm {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+
+/*
+ * Page hero: deep navy gradient with two soft rings and a faint dot grid,
+ * the same banner language Sianggar uses so the two apps read as one
+ * family.
+ */
+.hero-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 88% -20%, rgb(255 255 255 / 0.14) 0 22%, transparent 22.5%),
+    radial-gradient(circle at 96% 120%, rgb(255 255 255 / 0.09) 0 18%, transparent 18.5%),
+    linear-gradient(120deg, var(--brand-navy-deep) 0%, var(--brand-navy) 48%, var(--brand-navy-bright) 100%);
+}
+
+.hero-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgb(255 255 255 / 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(90deg, transparent 35%, black 100%);
+}
+
+[data-sidebar="sidebar"] {
+  background: linear-gradient(180deg, var(--brand-navy-deep) 0%, var(--brand-navy) 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -12px rgb(15 47 122 / 0.35);
+  }
 }

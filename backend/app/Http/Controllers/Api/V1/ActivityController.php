@@ -29,21 +29,14 @@ class ActivityController extends Controller
 
         $activities = Activity::query()
             ->with(['activityType', 'unit', 'fundSource', 'creator'])
-            ->when(
-                $user->hasRole('tu') && ! $user->hasRole('super_admin', 'admin'),
-                fn ($q) => $q->where('created_by', $user->id),
-            )
-            ->when(
-                $user->hasRole('guru_tendik') && $user->employee_id,
-                fn ($q) => $q->whereHas('members', fn ($m) => $m->where('employee_id', $user->employee_id)),
-            )
+            ->visibleTo($user)
             ->when($request->string('status')->toString(), fn ($q, $status) => $q->where('status', $status))
             ->when($request->integer('unit_id'), fn ($q, $unitId) => $q->where('unit_id', $unitId))
             ->when($request->string('search')->toString(), fn ($q, $s) => $q->where(function ($q2) use ($s) {
                 $q2->where('name', 'like', "%{$s}%")->orWhere('activity_code', 'like', "%{$s}%");
             }))
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(ActivityResource::collection($activities));
     }
@@ -62,6 +55,7 @@ class ActivityController extends Controller
         return $this->success(new ActivityResource($activity->load([
             'activityType', 'unit', 'fundSource', 'pic', 'creator', 'budget',
             'members.employee', 'honorDetails.employee', 'honorDetails.honorType', 'honorDetails.activityMember',
+            'disbursement.events', 'disbursement.latestEvent',
             'approvals.approver', 'approvals.logs.actor', 'documents',
         ])));
     }

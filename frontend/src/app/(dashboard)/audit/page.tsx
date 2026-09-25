@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHeader } from '@/components/common/page-header';
 
 import { Unauthorized } from '@/components/layout/unauthorized';
 import { listAuditLogsServer } from '@/lib/api/audit.server';
@@ -40,12 +41,11 @@ export default async function AuditTrailPage({
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Audit Trail</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Riwayat seluruh perubahan penting: siapa, kapan, dan aksi apa yang dilakukan.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Sistem' }, { label: 'Audit Trail' }]}
+        title={<>Audit Trail</>}
+        description={<>Riwayat seluruh perubahan penting: siapa, kapan, dan aksi apa yang dilakukan.</>}
+      />
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {logs.length === 0 ? (

@@ -38,6 +38,27 @@ export type HonorDetail = {
   notes: string | null;
 };
 
+/** Mirror of the Sianggar pengajuan raised from an activity. */
+export type ActivityDisbursement = {
+  nomor_pengajuan: string | null;
+  no_surat: string | null;
+  status_proses: string | null;
+  current_stage: string | null;
+  approved_amount: number | null;
+  no_voucher: string | null;
+  paid_at: string | null;
+  last_event_at: string | null;
+  last_note?: string | null;
+  events?: {
+    event_type: string;
+    stage: string | null;
+    status: string | null;
+    actor_name: string | null;
+    note: string | null;
+    occurred_at: string;
+  }[];
+};
+
 export type ApprovalLog = {
   action: string;
   from_status: string;
@@ -120,6 +141,9 @@ export type Activity = {
   sianggar_status: SianggarStatus | null;
   sianggar_synced_at: string | null;
   sianggar_last_error: string | null;
+  /** Hanya ada kalau data pencairan ikut dimuat (detail, Status Pencairan). */
+  disbursement_state?: 'belum_terkirim' | 'menunggu_sdm' | 'diproses' | 'dibayar' | 'ditolak' | null;
+  disbursement?: ActivityDisbursement | null;
   creator?: { id: number; name: string };
   budget?: Budget;
   members?: ActivityMember[];

@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\ActivityTypeController;
 use App\Http\Controllers\Api\V1\ApprovalController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\DisbursementController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\FundSourceController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PositionController;
 use App\Http\Controllers\Api\V1\PublicVerificationController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\RolePermissionController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\SianggarCallbackController;
 use App\Http\Controllers\Api\V1\SianggarController;
@@ -61,18 +64,21 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/search', [SearchController::class, 'index']);
 
+        Route::middleware('permission:dashboard.view')->get('/dashboard', DashboardController::class);
+
         // Master Data. ROLE_PERMISSION.md's matrix has no dedicated line
         // for these lookup tables; each reuses the closest related
-        // permission pair (documented simplification, see AI_CODING_RULES 18):
-        // units/positions -> employees.*, activity-types -> activities.*,
-        // honor-types/honor-rates -> honor-rates.*, fund-sources -> budget.*.
+        // view permission (documented simplification, see AI_CODING_RULES 18).
+        // Changing them is yayasan-level work (master-data.manage), and the
+        // tariffs are set by SK Yayasan (honor-rates.manage) — neither is
+        // given to TU, who raises the honor claims those tables price.
         $masterData = [
-            ['uri' => 'units', 'param' => 'unit', 'controller' => UnitController::class, 'view' => 'employees.view', 'manage' => 'employees.manage'],
-            ['uri' => 'positions', 'param' => 'position', 'controller' => PositionController::class, 'view' => 'employees.view', 'manage' => 'employees.manage'],
-            ['uri' => 'activity-types', 'param' => 'activityType', 'controller' => ActivityTypeController::class, 'view' => 'activities.view', 'manage' => 'activities.create'],
+            ['uri' => 'units', 'param' => 'unit', 'controller' => UnitController::class, 'view' => 'employees.view', 'manage' => 'master-data.manage'],
+            ['uri' => 'positions', 'param' => 'position', 'controller' => PositionController::class, 'view' => 'employees.view', 'manage' => 'master-data.manage'],
+            ['uri' => 'activity-types', 'param' => 'activityType', 'controller' => ActivityTypeController::class, 'view' => 'activities.view', 'manage' => 'master-data.manage'],
             ['uri' => 'honor-types', 'param' => 'honorType', 'controller' => HonorTypeController::class, 'view' => 'honor-rates.view', 'manage' => 'honor-rates.manage'],
             ['uri' => 'honor-rates', 'param' => 'honorRate', 'controller' => HonorRateController::class, 'view' => 'honor-rates.view', 'manage' => 'honor-rates.manage'],
-            ['uri' => 'fund-sources', 'param' => 'fundSource', 'controller' => FundSourceController::class, 'view' => 'budget.view', 'manage' => 'budget.manage'],
+            ['uri' => 'fund-sources', 'param' => 'fundSource', 'controller' => FundSourceController::class, 'view' => 'budget.view', 'manage' => 'master-data.manage'],
         ];
 
         foreach ($masterData as $resource) {
@@ -98,6 +104,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/employees/{employee}', [EmployeeController::class, 'show']);
         });
         Route::middleware('permission:employees.manage')->group(function () {
+            Route::get('/employees/import/template', [EmployeeController::class, 'importTemplate']);
+            Route::post('/employees/import', [EmployeeController::class, 'import']);
             Route::post('/employees', [EmployeeController::class, 'store']);
             Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
             Route::patch('/employees/{employee}/status', [EmployeeController::class, 'updateStatus']);
@@ -111,6 +119,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/activities/{activity}/honors', [HonorController::class, 'index']);
             Route::get('/activities/{activity}/documents', [DocumentController::class, 'index']);
             Route::get('/activities/{activity}/approvals', [ApprovalController::class, 'forActivity']);
+            // Status Pencairan - mirror of Sianggar progress per approved activity.
+            Route::get('/disbursements', [DisbursementController::class, 'index']);
         });
         Route::middleware('permission:documents.view')
             ->get('/activities/{activity}/employees/{employee}/honor-slip', [HonorController::class, 'slip']);
@@ -181,11 +191,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/reports/honors', [ReportController::class, 'honors']);
             Route::get('/reports/employees/{employee}/honors', [ReportController::class, 'employeeHonors']);
             Route::get('/reports/budget', [ReportController::class, 'budget']);
+            Route::get('/reports/export/{type}', [ReportController::class, 'export']);
 
             if (config('vakasi.payment_module')) {
                 Route::get('/reports/payments', [ReportController::class, 'payments']);
             }
         });
+
+        Route::middleware('permission:my-honors.view')->get('/my-honors', [ReportController::class, 'myHonors']);
 
         // Audit
         Route::middleware('permission:audit.view')->get('/audit-logs', [AuditLogController::class, 'index']);
@@ -196,6 +209,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/users', [UserController::class, 'store']);
             Route::put('/users/{user}', [UserController::class, 'update']);
             Route::get('/roles', [UserController::class, 'roles']);
+        });
+
+        // Role & Hak Akses - Super Admin only.
+        Route::middleware('permission:roles.manage')->group(function () {
+            Route::get('/role-permissions', [RolePermissionController::class, 'index']);
+            Route::put('/role-permissions/{role}', [RolePermissionController::class, 'update']);
         });
     });
 });

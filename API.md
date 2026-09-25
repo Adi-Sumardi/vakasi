@@ -89,7 +89,14 @@ POST   /employees
 GET    /employees/{id}
 PUT    /employees/{id}
 PATCH  /employees/{id}/status
+GET    /employees/import/template   # template CSV (pemisah ;)
+POST   /employees/import            # multipart `file`; semua baris atau tidak sama sekali
 ```
+
+Import: kolom `kode_pegawai;nama;nip;nuptk;jenis;kode_unit;kode_jabatan;bank;nama_rekening;no_rekening`.
+Baris dicocokkan lewat `kode_pegawai` (ada = diperbarui). Bila ada baris
+salah, respons 422 memuat `errors.baris_N` per baris dan tidak ada data
+yang disimpan.
 
 Filter:
 
@@ -224,7 +231,13 @@ GET /reports/activities
 GET /reports/honors
 GET /reports/employees/{id}/honors
 GET /reports/budget
-GET /reports/payments
+GET /reports/payments              # hanya bila modul pembayaran aktif
+GET /reports/export/{type}         # CSV untuk Excel; type: kegiatan|honor|anggaran|pencairan
+GET /disbursements?state=          # Status Pencairan; state: belum_terkirim|menunggu_sdm|diproses|dibayar|ditolak
+GET /dashboard                     # ringkasan dashboard sesuai role & unit
+GET /my-honors                     # Honor Saya (Guru/Tendik)
+GET /role-permissions              # Role & Hak Akses (roles.manage)
+PUT /role-permissions/{role}       # {permissions: [nama...]}; Super Admin tidak dapat diubah
 ```
 
 Parameters:
@@ -255,6 +268,18 @@ Success:
   "success": true,
   "message": "Data berhasil diproses.",
   "data": {}
+}
+```
+
+Daftar berhalaman menambahkan `meta` di samping `data` (yang tetap
+berupa array), dan menerima `?per_page=` (1--1000, default 20):
+
+``` json
+{
+  "success": true,
+  "message": "Data berhasil diproses.",
+  "data": [],
+  "meta": { "current_page": 1, "last_page": 3, "per_page": 20, "total": 57 }
 }
 ```
 

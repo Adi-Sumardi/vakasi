@@ -18,7 +18,17 @@ class UpdateEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'unit_id' => ['sometimes', 'exists:units,id'],
+            'unit_id' => [
+                'sometimes',
+                'exists:units,id',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $unitId = $this->user()?->scopedUnitId();
+
+                    if ($unitId !== null && (int) $value !== $unitId) {
+                        $fail('Anda hanya dapat mengelola pegawai di unit Anda sendiri.');
+                    }
+                },
+            ],
             'position_id' => ['sometimes', 'exists:positions,id'],
             'employee_code' => ['sometimes', 'string', 'max:50', Rule::unique('employees', 'employee_code')->ignore($this->route('employee'))],
             'nip' => ['nullable', 'string', 'max:50'],

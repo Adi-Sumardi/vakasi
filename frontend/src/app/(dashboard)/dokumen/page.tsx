@@ -1,7 +1,11 @@
 import Link from 'next/link';
+import { PageHeader } from '@/components/common/page-header';
 
 import { Icon } from '@/components/ui/icon';
-import { listAllDocumentsServer } from '@/lib/api/documents.server';
+import { PageTabs } from '@/components/common/page-tabs';
+import { PaginationBar } from '@/components/common/pagination-bar';
+import type { DocumentRow } from '@/lib/api/documents.server';
+import { serverApiFetchPage, toQuery } from '@/lib/api/server';
 
 const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   sk_panitia: 'SK Panitia',
@@ -18,22 +22,34 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default async function DokumenPage() {
-  const documents = await listAllDocumentsServer();
+const TYPE_TABS = ['', 'sk_panitia', 'surat_tugas', 'daftar_hadir', 'rincian_anggaran', 'lainnya'];
+
+export default async function DokumenPage({ searchParams }: { searchParams: Promise<{ type?: string; page?: string }> }) {
+  const { type = '', page } = await searchParams;
+  const list = await serverApiFetchPage<DocumentRow>(`/api/v1/documents${toQuery({ document_type: type, page })}`);
+  const documents = list.data;
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Dokumen</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Seluruh dokumen (surat tugas, daftar hadir, bukti transfer, dsb.) dari semua kegiatan dan pembayaran.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Arsip Dokumen' }]}
+        title={<>Arsip Dokumen</>}
+        description={<>SK Panitia, surat tugas, daftar hadir, dan dokumen lain dari semua kegiatan. Dokumen diunggah dari halaman detail kegiatan.</>}
+      />
+
+      <PageTabs
+        active={type}
+        tabs={TYPE_TABS.map((key) => ({
+          key,
+          label: key ? (DOCUMENT_TYPE_LABEL[key] ?? key) : 'Semua',
+          href: `/dokumen${toQuery({ type: key })}`,
+        }))}
+      />
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {documents.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
-            Belum ada dokumen diunggah.
+            {type ? 'Belum ada dokumen jenis ini.' : 'Belum ada dokumen diunggah.'}
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
@@ -84,6 +100,7 @@ export default async function DokumenPage() {
             </table>
           </div>
         )}
+        <PaginationBar meta={list.meta} basePath="/dokumen" params={{ type: type || undefined }} />
       </div>
     </div>
   );

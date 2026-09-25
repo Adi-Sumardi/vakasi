@@ -26,7 +26,19 @@ class UpdateActivityRequest extends FormRequest
     {
         return [
             'activity_type_id' => ['sometimes', Rule::exists('activity_types', 'id')->where('status', 'active')],
-            'unit_id' => ['sometimes', Rule::exists('units', 'id')->where('status', 'active')],
+            'unit_id' => [
+                'sometimes',
+                Rule::exists('units', 'id')->where('status', 'active'),
+                // An account tied to a unit raises activities for that
+                // unit only.
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $unitId = $this->user()?->scopedUnitId();
+
+                    if ($unitId !== null && (int) $value !== $unitId) {
+                        $fail('Anda hanya dapat membuat kegiatan untuk unit Anda sendiri.');
+                    }
+                },
+            ],
             'fund_source_id' => ['sometimes', Rule::exists('fund_sources', 'id')->where('status', 'active')],
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

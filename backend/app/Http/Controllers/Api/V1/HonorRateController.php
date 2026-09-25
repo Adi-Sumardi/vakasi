@@ -29,7 +29,7 @@ class HonorRateController extends Controller
             ->when($request->integer('honor_type_id'), fn ($q, $id) => $q->where('honor_type_id', $id))
             ->when($request->string('status')->toString(), fn ($q, $status) => $q->where('status', $status))
             ->latest('effective_from')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(HonorRateResource::collection($rates));
     }

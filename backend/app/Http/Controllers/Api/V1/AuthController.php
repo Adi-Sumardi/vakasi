@@ -87,7 +87,7 @@ class AuthController extends Controller
         $this->auditService->logModel('login', $user);
 
         return $this->success(
-            new UserResource($user->load('role.permissions')),
+            new UserResource($user->load(['role.permissions', 'unit'])),
             'Login berhasil.',
         );
     }
@@ -113,7 +113,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return $this->success(
-            new UserResource($request->user()->load('role.permissions')),
+            new UserResource($request->user()->load(['role.permissions', 'unit'])),
         );
     }
 

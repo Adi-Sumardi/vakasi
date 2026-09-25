@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -126,6 +127,44 @@ class Activity extends Model
         return $this->hasMany(HonorDetail::class);
     }
 
+    /** @return HasOne<ActivityDisbursement, $this> */
+    public function disbursement(): HasOne
+    {
+        return $this->hasOne(ActivityDisbursement::class);
+    }
+
+    public const DISBURSEMENT_NOT_SENT = 'belum_terkirim';
+
+    public const DISBURSEMENT_WAITING = 'menunggu_sdm';
+
+    public const DISBURSEMENT_PROCESSING = 'diproses';
+
+    public const DISBURSEMENT_PAID = 'dibayar';
+
+    public const DISBURSEMENT_REJECTED = 'ditolak';
+
+    /**
+     * Where an approved activity's money stands, as mirrored from
+     * Sianggar. Null while the activity is not approved yet — before
+     * approval there is nothing to disburse.
+     */
+    public function disbursementState(): ?string
+    {
+        if ($this->status !== self::APPROVED) {
+            return null;
+        }
+
+        $disbursement = $this->disbursement;
+
+        return match (true) {
+            $disbursement?->isPaid() => self::DISBURSEMENT_PAID,
+            $disbursement?->isRejected() => self::DISBURSEMENT_REJECTED,
+            $disbursement !== null => self::DISBURSEMENT_PROCESSING,
+            $this->sianggar_status === self::SIANGGAR_SENT => self::DISBURSEMENT_WAITING,
+            default => self::DISBURSEMENT_NOT_SENT,
+        };
+    }
+
     /** @return HasOne<Budget, $this> */
     public function budget(): HasOne
     {
@@ -142,6 +181,34 @@ class Activity extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * The activities a user may see, in one place so the list, reports,
+     * dashboard and approval queue cannot drift apart:
+     * - Guru/Tendik: activities they sit on the committee of;
+     * - an account tied to a unit: that unit's activities;
+     * - a TU without a unit (older accounts): only what they created;
+     * - everyone else: all activities.
+     *
+     * @param  Builder<Activity>  $query
+     * @return Builder<Activity>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole('guru_tendik')) {
+            return $query->whereHas('members', fn (Builder $m) => $m->where('employee_id', $user->employee_id ?? 0));
+        }
+
+        if ($unitId = $user->scopedUnitId()) {
+            return $query->where('unit_id', $unitId);
+        }
+
+        if ($user->hasRole('tu')) {
+            return $query->where('created_by', $user->id);
+        }
+
+        return $query;
     }
 
     /** @return HasMany<Document, $this> */

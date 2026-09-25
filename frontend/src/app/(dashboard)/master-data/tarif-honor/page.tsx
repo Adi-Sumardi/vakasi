@@ -1,8 +1,6 @@
-import { listHonorRates, listHonorTypes, listUnits } from '@/lib/api/master-data.server';
-import { HonorRateManager } from '@/components/master-data/honor-rate-manager';
+import { redirect } from 'next/navigation';
 
-export default async function TarifHonorPage() {
-  const [rates, honorTypes, units] = await Promise.all([listHonorRates(), listHonorTypes(), listUnits()]);
-
-  return <HonorRateManager rates={rates} honorTypes={honorTypes} units={units} />;
+/** Menu digabung; tautan lama diarahkan ke halaman barunya. */
+export default function LegacyPage() {
+  redirect('/master-data/honor');
 }

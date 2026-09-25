@@ -24,20 +24,17 @@ class DocumentController extends Controller
     {
         $user = $request->user();
 
-        // ROLE_PERMISSION.md section 4: Guru/Tendik only see documents
-        // tied to activities they're a member of; every other role with
-        // documents.view sees everything (matches the permission matrix).
         $documents = Document::query()
             ->with(['uploader', 'activity', 'payment'])
-            ->when(
-                $user->hasRole('guru_tendik') && $user->employee_id,
-                fn (Builder $q) => $q->where(function (Builder $q2) use ($user) {
-                    $q2->whereHas('activity.members', fn (Builder $m) => $m->where('employee_id', $user->employee_id))
-                        ->orWhereHas('payment.activity.members', fn (Builder $m) => $m->where('employee_id', $user->employee_id));
-                }),
-            )
+            // Same visibility as the activity list; payment evidence follows
+            // the activity it belongs to.
+            ->where(function (Builder $q) use ($user) {
+                $q->whereHas('activity', fn (Builder $a) => $a->visibleTo($user))
+                    ->orWhereHas('payment.activity', fn (Builder $a) => $a->visibleTo($user));
+            })
+            ->when($request->string('document_type')->toString(), fn (Builder $q, $type) => $q->where('document_type', $type))
             ->latest('created_at')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return $this->success(DocumentResource::collection($documents));
     }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Mirror of a Sianggar PengajuanAnggaran raised from this activity.
@@ -69,8 +70,24 @@ class ActivityDisbursement extends Model
         return $this->hasMany(ActivityDisbursementEvent::class)->orderBy('occurred_at');
     }
 
+    /** @return HasOne<ActivityDisbursementEvent, $this> */
+    public function latestEvent(): HasOne
+    {
+        return $this->hasOne(ActivityDisbursementEvent::class)->latestOfMany('occurred_at');
+    }
+
     public function isPaid(): bool
     {
-        return $this->status_proses === 'paid';
+        return $this->paid_at !== null || in_array($this->status_proses, ['paid', 'done'], true);
+    }
+
+    /**
+     * Refused by SDM before a pengajuan existed, or refused somewhere in
+     * Sianggar's approval chain after it did.
+     */
+    public function isRejected(): bool
+    {
+        return $this->status_proses === 'rejected'
+            || in_array($this->latestEvent?->event_type, ['intake.rejected', 'pengajuan.rejected'], true);
     }
 }

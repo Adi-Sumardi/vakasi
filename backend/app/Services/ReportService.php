@@ -30,15 +30,15 @@ class ReportService
      */
     private function scopeActivitiesToUser(Builder $query, User $user): Builder
     {
-        return $query
-            ->when(
-                $user->hasRole('tu') && ! $user->hasRole('super_admin', 'admin'),
-                fn (Builder $q) => $q->where('created_by', $user->id),
-            )
-            ->when(
-                $user->hasRole('guru_tendik') && $user->employee_id,
-                fn (Builder $q) => $q->whereHas('members', fn (Builder $m) => $m->where('employee_id', $user->employee_id)),
-            );
+        return $query->visibleTo($user);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function perPage(array $filters): int
+    {
+        return max(1, min(1000, (int) ($filters['per_page'] ?? 20) ?: 20));
     }
 
     /**
@@ -53,7 +53,7 @@ class ReportService
             ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('start_date', '>=', $v))
             ->when($filters['end_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('end_date', '<=', $v))
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($filters));
     }
 
     /**
@@ -63,12 +63,14 @@ class ReportService
     {
         return HonorDetail::query()
             ->whereHas('activity', fn (Builder $a) => $this->scopeActivitiesToUser($a, $user))
-            ->with(['activity', 'employee', 'honorType'])
+            ->with(['activity', 'employee', 'honorType', 'activityMember'])
             ->when($filters['unit_id'] ?? null, fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->where('unit_id', $v)))
-            ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('created_at', '>=', $v))
-            ->when($filters['end_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('created_at', '<=', $v))
+            // By the activity's date, like the Excel export, so the screen
+            // and the file agree on what "September" means.
+            ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->whereDate('start_date', '>=', $v)))
+            ->when($filters['end_date'] ?? null, fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->whereDate('start_date', '<=', $v)))
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($filters));
     }
 
     /**
@@ -83,7 +85,7 @@ class ReportService
             ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('created_at', '>=', $v))
             ->when($filters['end_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('created_at', '<=', $v))
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($filters));
     }
 
     /**
@@ -93,13 +95,13 @@ class ReportService
     {
         return Budget::query()
             ->whereHas('activity', fn (Builder $a) => $this->scopeActivitiesToUser($a, $user))
-            ->with('activity')
+            ->with(['activity.unit', 'activity.fundSource', 'activity.disbursement.latestEvent'])
             ->when(
                 $filters['unit_id'] ?? null,
                 fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->where('unit_id', $v)),
             )
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($filters));
     }
 
     /**
@@ -114,6 +116,6 @@ class ReportService
             ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('payment_date', '>=', $v))
             ->when($filters['end_date'] ?? null, fn (Builder $q, $v) => $q->whereDate('payment_date', '<=', $v))
             ->latest('payment_date')
-            ->paginate(20);
+            ->paginate($this->perPage($filters));
     }
 }
