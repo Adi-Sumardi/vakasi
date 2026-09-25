@@ -6,18 +6,10 @@ import { Icon } from '@/components/ui/icon';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
 import { meServer } from '@/lib/api/auth.server';
 import { hasPermission, roleLabel } from '@/lib/api/auth';
-import { DISBURSEMENT_STATES, type DashboardActivityRow, type DashboardSummary } from '@/lib/api/dashboard';
+import type { DashboardActivityRow, DashboardSummary } from '@/lib/api/dashboard';
 import { serverApiFetch } from '@/lib/api/server';
 import { formatRupiah } from '@/lib/format';
 import { cn } from '@/lib/utils';
-
-const STATE_TINT: Record<string, string> = {
-  belum_terkirim: 'bg-error-container text-on-error-container',
-  menunggu_sdm: 'bg-gold-soft text-on-gold',
-  diproses: 'bg-primary-fixed text-on-primary-fixed-variant',
-  dibayar: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  ditolak: 'bg-surface-container text-on-surface-variant',
-};
 
 /**
  * One dashboard, filled per role from GET /dashboard: the server only
@@ -66,21 +58,6 @@ export default async function DashboardPage() {
           <StatCard key={card.label} label={card.label} value={card.value} icon={card.icon} tone={card.tone} href={card.href} />
         ))}
       </section>
-
-      <Link href="/pencairan" className="lift bg-surface-container-lowest p-space-lg rounded-2xl border border-outline-variant/30 shadow-xs flex flex-col gap-space-md">
-        <div className="flex items-center justify-between">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Status pencairan tahun ini</span>
-          <Icon name="chevron_right" className="text-outline" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-space-sm">
-          {DISBURSEMENT_STATES.map((state) => (
-            <div key={state.key} className={cn('flex flex-col rounded-xl px-space-md py-space-sm', STATE_TINT[state.key])}>
-              <span className="font-headline-sm text-headline-sm font-bold tabular-nums">{summary.disbursement_counts[state.key]}</span>
-              <span className="font-body-sm text-body-sm">{state.label}</span>
-            </div>
-          ))}
-        </div>
-      </Link>
 
       {(summary.sianggar_failed ?? 0) > 0 && (
         <Link
