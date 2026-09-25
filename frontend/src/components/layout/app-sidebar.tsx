@@ -39,15 +39,15 @@ export function AppSidebar({ user }: { user: AuthUser }) {
   }, [user.permissions, pathname]);
 
   return (
-    <Sidebar className="border-r-0">
-      <SidebarHeader className="h-header-height px-space-lg flex flex-row items-center justify-between border-b border-white/10">
+    <Sidebar className="border-r border-outline-variant/30 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
+      <SidebarHeader className="h-header-height px-space-lg flex flex-row items-center justify-between border-b border-outline-variant/30">
         <div className="flex items-center gap-space-sm">
-          <span className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
+          <span className="w-9 h-9 rounded-xl bg-surface-container-lowest flex items-center justify-center">
             <Image alt="Logo VAKASI" src="/logo.png" width={28} height={28} priority className="h-7 w-auto object-contain" />
           </span>
           <div className="flex flex-col">
-            <span className="font-headline-sm text-headline-sm tracking-tight text-white leading-none font-bold">VAKASI</span>
-            <span className="font-label-sm text-label-sm text-gold font-semibold mt-space-2xs">Yayasan Asrama Pelajar Islam</span>
+            <span className="font-headline-sm text-headline-sm tracking-tight text-primary leading-none font-bold">VAKASI</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold mt-space-2xs">Yayasan Asrama Pelajar Islam</span>
           </div>
         </div>
       </SidebarHeader>
@@ -55,9 +55,9 @@ export function AppSidebar({ user }: { user: AuthUser }) {
       <SidebarContent className="px-space-md py-space-md space-y-space-xs">
         {/* Which data this account works on: a unit-bound account never
             sees other schools, so say so up front. */}
-        <div className="flex items-center justify-between gap-space-xs px-space-md py-space-xs rounded-lg bg-white/8 border border-white/10 font-label-sm text-label-sm">
-          <span className="text-white/60">Cakupan data</span>
-          <span className="font-semibold text-white truncate">
+        <div className="flex items-center justify-between gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+          <span className="text-on-surface-variant">Cakupan data</span>
+          <span className="font-semibold text-on-surface truncate">
             {user.scoped_unit_id ? (user.unit?.name ?? 'Unit sendiri') : 'Semua unit'}
           </span>
         </div>
@@ -65,7 +65,7 @@ export function AppSidebar({ user }: { user: AuthUser }) {
         {groups.map((group, index) => (
           <SidebarGroup key={group.label ?? `group-${index}`} className="p-0">
             {group.label && (
-              <SidebarGroupLabel className="px-space-md pt-space-xs pb-space-2xs font-label-sm text-label-sm uppercase tracking-wider text-white/45 font-semibold">
+              <SidebarGroupLabel className="px-space-md pt-space-xs pb-space-2xs font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">
                 {group.label}
               </SidebarGroupLabel>
             )}
@@ -82,14 +82,14 @@ export function AppSidebar({ user }: { user: AuthUser }) {
                         className={cn(
                           'relative flex items-center justify-between gap-space-sm px-space-md py-space-sm rounded-lg transition-all font-body-sm text-body-sm group',
                           isActive
-                            ? 'bg-white/12 text-white font-semibold before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-full before:bg-gold'
-                            : 'text-white/75 hover:bg-white/8 hover:text-white'
+                            ? 'bg-secondary-container text-primary font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-full before:bg-gold'
+                            : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                         )}
                       >
                         <div className="flex items-center gap-space-md min-w-0">
                           <Icon
                             name={item.icon}
-                            className={cn('text-[18px] transition-colors', isActive ? 'text-gold' : 'text-white/60 group-hover:text-white')}
+                            className={cn('text-[18px] transition-colors', isActive ? 'text-primary' : 'text-secondary group-hover:text-on-surface')}
                           />
                           <span className="truncate">{item.label}</span>
                         </div>
@@ -108,13 +108,13 @@ export function AppSidebar({ user }: { user: AuthUser }) {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-space-md border-t border-white/10">
-        <div className="flex items-center justify-between px-space-sm py-space-xs rounded-lg bg-white/8 border border-white/10">
+      <SidebarFooter className="p-space-md border-t border-outline-variant/30 bg-surface-container-low/40">
+        <div className="flex items-center justify-between px-space-sm py-space-xs rounded-lg bg-surface-container-lowest border border-outline-variant/40">
           <div className="flex items-center gap-space-xs">
-            <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
-            <span className="font-label-sm text-label-sm font-semibold text-white">Sistem Aktif</span>
+            <span className="w-2 h-2 rounded-full bg-tertiary"></span>
+            <span className="font-label-sm text-label-sm font-semibold text-on-surface">Sistem Aktif</span>
           </div>
-          <span className="font-label-sm text-label-sm text-gold truncate">{roleLabel(user)}</span>
+          <span className="font-label-sm text-label-sm text-on-surface-variant truncate">{roleLabel(user)}</span>
         </div>
       </SidebarFooter>
     </Sidebar>
