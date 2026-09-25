@@ -95,7 +95,11 @@ class ActivityWorkflowTest extends TestCase
             'items' => [['employee_id' => $employee->id, 'honor_type_id' => $honorType->id, 'volume' => 8]],
         ])->assertOk()->assertJsonPath('data.net_amount', 200000);
 
-        // 4. TU submits for approval.
+        // 4. TU uploads the signed SK Panitia, then submits for approval.
+        $this->as($tu)->postJson("/api/v1/activities/{$activityId}/submit")
+            ->assertStatus(422)->assertJsonValidationErrors('documents');
+        $this->attachSkPanitia($activityId, $tu);
+
         $submitResponse = $this->as($tu)->postJson("/api/v1/activities/{$activityId}/submit");
         $submitResponse->assertOk()->assertJsonPath('data.status', 'submitted');
 
@@ -110,7 +114,7 @@ class ActivityWorkflowTest extends TestCase
         // tersimpan: halaman detail menampilkan keduanya di kartu bukti
         // approval, dan diam-diam hilang di serialisasi tidak terlihat
         // sampai ada yang membuka halamannya.
-        $this->assertMatchesRegularExpression('/^SK-\d{4}-\d{4}$/', $approveResponse->json('data.approval_document_number'));
+        $this->assertMatchesRegularExpression('/^APV-\d{4}-\d{4}$/', $approveResponse->json('data.approval_document_number'));
         $this->assertNotEmpty($approveResponse->json('data.verification_code'));
 
         $this->assertDatabaseHas('budgets', [
@@ -199,6 +203,7 @@ class ActivityWorkflowTest extends TestCase
         $this->as($tu)->postJson("/api/v1/activities/{$activityId}/calculate-honor", [
             'items' => [['employee_id' => $employee->id, 'honor_type_id' => $honorType->id, 'volume' => 2]],
         ]);
+        $this->attachSkPanitia($activityId, $tu);
         $this->as($tu)->postJson("/api/v1/activities/{$activityId}/submit");
 
         // Reject without a reason must fail validation.

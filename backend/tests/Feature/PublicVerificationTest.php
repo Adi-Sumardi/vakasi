@@ -62,6 +62,7 @@ class PublicVerificationTest extends TestCase
         $this->as($tu)->postJson("/api/v1/activities/{$activityId}/calculate-honor", [
             'items' => [['employee_id' => $employee->id, 'honor_type_id' => $honorType->id, 'volume' => 2]],
         ]);
+        $this->attachSkPanitia($activityId, $tu);
         $this->as($tu)->postJson("/api/v1/activities/{$activityId}/submit");
         $this->as($kepsek)->postJson("/api/v1/activities/{$activityId}/approve");
 
@@ -138,7 +139,7 @@ class PublicVerificationTest extends TestCase
             ->assertJsonPath('data.fund_source', $activity->fundSource->name)
             ->assertJsonPath('data.location', 'Aula Sekolah');
         $this->assertNotNull($response->json('data.approval_document_number'));
-        $this->assertStringStartsWith('SK-', $response->json('data.approval_document_number'));
+        $this->assertStringStartsWith('APV-', $response->json('data.approval_document_number'));
     }
 
     public function test_unknown_code_returns_404(): void

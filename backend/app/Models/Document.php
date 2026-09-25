@@ -14,7 +14,24 @@ class Document extends Model
      * impossible to finish. These are the values the UI offers
      * (activity-documents.tsx / dokumen/page.tsx).
      */
-    public const ACTIVITY_TYPES = ['surat_tugas', 'daftar_hadir', 'rincian_anggaran', 'lainnya'];
+    public const ACTIVITY_TYPES = ['sk_panitia', 'surat_tugas', 'daftar_hadir', 'rincian_anggaran', 'lainnya'];
+
+    /**
+     * The signed SK Panitia is the legal basis for paying anyone on the
+     * committee at all, so an activity cannot be submitted without it
+     * (ApprovalService::submit).
+     */
+    public const SK_PANITIA = 'sk_panitia';
+
+    /** Human labels, also used to name the files handed to Sianggar. */
+    public const LABELS = [
+        'sk_panitia' => 'SK Panitia',
+        'surat_tugas' => 'Surat Tugas',
+        'daftar_hadir' => 'Daftar Hadir',
+        'rincian_anggaran' => 'Rincian Anggaran',
+        'lainnya' => 'Lampiran Lain',
+        'bukti_transfer' => 'Bukti Transfer',
+    ];
 
     public const PAYMENT_EVIDENCE_TYPES = ['bukti_transfer', 'lainnya'];
 

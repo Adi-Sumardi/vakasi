@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -10,8 +10,10 @@ import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api/types';
 import type { ActivityType, FundSource, HonorType, Unit } from '@/lib/api/master-data';
 import type { Employee } from '@/lib/api/employees';
+import { uploadActivityDocument } from '@/lib/api/documents';
 import {
-  addActivityMember,
+  SK_PANITIA,
+  addActivityMembers,
   calculateHonor,
   createActivity,
   removeActivityMember,
@@ -51,9 +53,21 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
   });
 
   const [members, setMembers] = useState<ActivityMember[]>([]);
-  const [memberForm, setMemberForm] = useState({ employee_id: employees[0]?.id ?? 0, role_name: '' });
+  const [memberForm, setMemberForm] = useState<{ employee_ids: number[]; role_name: string }>({ employee_ids: [], role_name: '' });
+  const [employeeQuery, setEmployeeQuery] = useState('');
+  const filteredEmployees = useMemo(() => {
+    const q = employeeQuery.trim().toLowerCase();
+    return q ? employees.filter((emp) => emp.name.toLowerCase().includes(q)) : employees;
+  }, [employees, employeeQuery]);
 
+  // Keyed by activity member, not employee: one employee can hold two
+  // roles (e.g. Pengawas and Korektor), each paid on its own line.
   const [honorForm, setHonorForm] = useState<Record<number, { honor_type_id: number; volume: number }>>({});
+  const [bulkHonor, setBulkHonor] = useState({ honor_type_id: honorTypes[0]?.id ?? 0, volume: 1 });
+
+  const [skPanitiaName, setSkPanitiaName] = useState<string | null>(null);
+  const [uploadingSk, setUploadingSk] = useState(false);
+  const skInput = useRef<HTMLInputElement>(null);
   const [honorDetails, setHonorDetails] = useState<HonorDetail[]>([]);
   const [honorTotals, setHonorTotals] = useState({ gross_amount: 0, tax_amount: 0, net_amount: 0 });
 
@@ -97,18 +111,22 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
       toast.error('Peran penugasan wajib diisi.');
       return;
     }
+    if (memberForm.employee_ids.length === 0) {
+      toast.error('Pilih minimal satu pegawai.');
+      return;
+    }
     try {
-      const member = await addActivityMember(activityId, {
-        employee_id: Number(memberForm.employee_id),
+      const added = await addActivityMembers(activityId, {
+        employee_ids: memberForm.employee_ids,
         role_name: memberForm.role_name,
       });
-      setMembers((prev) => [...prev, member]);
+      setMembers((prev) => [...prev, ...added]);
       setHonorForm((prev) => ({
         ...prev,
-        [member.employee.id]: { honor_type_id: honorTypes[0]?.id ?? 0, volume: 1 },
+        ...Object.fromEntries(added.map((member) => [member.id, { ...bulkHonor }])),
       }));
-      setMemberForm({ employee_id: employees[0]?.id ?? 0, role_name: '' });
-      toast.success('Peserta ditambahkan.');
+      setMemberForm({ employee_ids: [], role_name: '' });
+      toast.success(`${added.length} peserta ditambahkan sebagai ${memberForm.role_name}.`);
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Gagal menambahkan peserta.');
     }
@@ -121,10 +139,10 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
       setMembers((prev) => prev.filter((m) => m.id !== member.id));
       setHonorForm((prev) => {
         const next = { ...prev };
-        delete next[member.employee.id];
+        delete next[member.id];
         return next;
       });
-      setHonorDetails((prev) => prev.filter((d) => d.employee.id !== member.employee.id));
+      setHonorDetails((prev) => prev.filter((d) => d.activity_member_id !== member.id));
       toast.success('Peserta dihapus.');
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Gagal menghapus peserta.');
@@ -137,9 +155,9 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
       const result = await calculateHonor(
         activityId,
         members.map((m) => ({
-          employee_id: m.employee.id,
-          honor_type_id: honorForm[m.employee.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0,
-          volume: honorForm[m.employee.id]?.volume ?? 1,
+          activity_member_id: m.id,
+          honor_type_id: honorForm[m.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0,
+          volume: honorForm[m.id]?.volume ?? 1,
         }))
       );
       setHonorDetails(result.items);
@@ -147,6 +165,36 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
       toast.success('Honor berhasil dihitung.');
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Gagal menghitung honor.');
+    }
+  }
+
+  function toggleEmployee(id: number) {
+    setMemberForm((prev) => ({
+      ...prev,
+      employee_ids: prev.employee_ids.includes(id)
+        ? prev.employee_ids.filter((x) => x !== id)
+        : [...prev.employee_ids, id],
+    }));
+  }
+
+  function applyHonorToAll() {
+    setHonorForm(Object.fromEntries(members.map((m) => [m.id, { ...bulkHonor }])));
+    setHonorDetails([]);
+  }
+
+  async function handleUploadSk(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !activityId) return;
+    setUploadingSk(true);
+    try {
+      await uploadActivityDocument(activityId, SK_PANITIA, file);
+      setSkPanitiaName(file.name);
+      toast.success('SK Panitia berhasil diunggah.');
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'Gagal mengunggah SK Panitia.');
+    } finally {
+      setUploadingSk(false);
+      if (skInput.current) skInput.current.value = '';
     }
   }
 
@@ -314,16 +362,32 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
 
       {step === 1 && activityId && (
         <div className="flex flex-col gap-space-lg">
-          <form onSubmit={handleAddMember} className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs border border-outline-variant/30 flex flex-col sm:flex-row gap-space-sm items-end">
+          <form onSubmit={handleAddMember} className="bg-surface-container-lowest rounded-xl p-space-lg shadow-xs border border-outline-variant/30 flex flex-col sm:flex-row gap-space-sm sm:items-end">
             <div className="flex-1 w-full">
-              <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Pegawai</label>
-              <select
-                value={memberForm.employee_id}
-                onChange={(e) => setMemberForm({ ...memberForm, employee_id: Number(e.target.value) })}
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
-              >
-                {employees.map((emp) => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
-              </select>
+              <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">
+                Pegawai ({memberForm.employee_ids.length} dipilih)
+              </label>
+              <input
+                value={employeeQuery}
+                onChange={(e) => setEmployeeQuery(e.target.value)}
+                placeholder="Cari nama pegawai..."
+                className="w-full h-9 px-3 mb-1 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
+              />
+              <div className="max-h-48 overflow-y-auto rounded-lg border border-outline-variant/40 divide-y divide-surface-container-low">
+                {filteredEmployees.map((emp) => (
+                  <label key={emp.id} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-surface-container-low font-body-sm text-body-sm text-on-surface">
+                    <input
+                      type="checkbox"
+                      checked={memberForm.employee_ids.includes(emp.id)}
+                      onChange={() => toggleEmployee(emp.id)}
+                    />
+                    <span>{emp.name}</span>
+                  </label>
+                ))}
+                {filteredEmployees.length === 0 && (
+                  <p className="px-3 py-2 font-body-sm text-body-sm text-on-surface-variant">Pegawai tidak ditemukan.</p>
+                )}
+              </div>
             </div>
             <div className="flex-1 w-full">
               <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Peran Penugasan</label>
@@ -339,12 +403,38 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
               type="submit"
               className="h-10 px-space-lg rounded-lg bg-primary hover:bg-primary-container text-white font-label-md text-label-md font-semibold shrink-0"
             >
-              Tambah
+              Tambah {memberForm.employee_ids.length > 1 ? `${memberForm.employee_ids.length} Peserta` : ''}
             </button>
           </form>
 
           {members.length > 0 && (
             <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
+              {members.length > 1 && (
+                <div className="flex flex-wrap items-center gap-2 p-space-md border-b border-outline-variant/30 bg-surface-container-low">
+                  <span className="font-label-sm text-label-sm text-secondary uppercase font-semibold">Isi cepat:</span>
+                  <select
+                    value={bulkHonor.honor_type_id}
+                    onChange={(e) => setBulkHonor({ ...bulkHonor, honor_type_id: Number(e.target.value) })}
+                    className="h-8 px-2 rounded bg-surface-container-lowest border border-outline-variant/40 text-on-surface text-body-sm focus:outline-none"
+                  >
+                    {honorTypes.map((h) => <option key={h.id} value={h.id}>{h.name} ({h.unit})</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    min={1}
+                    value={bulkHonor.volume}
+                    onChange={(e) => setBulkHonor({ ...bulkHonor, volume: Number(e.target.value) })}
+                    className="w-16 h-8 text-center rounded bg-surface-container-lowest border border-outline-variant/40 font-mono text-body-sm focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyHonorToAll}
+                    className="h-8 px-3 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold border border-outline-variant/30"
+                  >
+                    Terapkan ke {members.length} peserta
+                  </button>
+                </div>
+              )}
               <table className="w-full text-left font-body-sm text-body-sm border-collapse">
                 <thead className="bg-surface-container-low text-on-surface-variant uppercase font-label-sm text-label-sm border-b border-outline-variant/30">
                   <tr>
@@ -358,7 +448,7 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
                 </thead>
                 <tbody className="divide-y divide-surface-container-low">
                   {members.map((m) => {
-                    const detail = honorDetails.find((d) => d.employee.id === m.employee.id);
+                    const detail = honorDetails.find((d) => d.activity_member_id === m.id);
                     return (
                       <tr key={m.id}>
                         <td className="px-space-base py-space-sm">
@@ -367,11 +457,11 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
                         </td>
                         <td className="px-space-base py-space-sm">
                           <select
-                            value={honorForm[m.employee.id]?.honor_type_id ?? honorTypes[0]?.id}
+                            value={honorForm[m.id]?.honor_type_id ?? honorTypes[0]?.id}
                             onChange={(e) =>
                               setHonorForm((prev) => ({
                                 ...prev,
-                                [m.employee.id]: { ...prev[m.employee.id], honor_type_id: Number(e.target.value), volume: prev[m.employee.id]?.volume ?? 1 },
+                                [m.id]: { ...prev[m.id], honor_type_id: Number(e.target.value), volume: prev[m.id]?.volume ?? 1 },
                               }))
                             }
                             className="h-8 px-2 rounded bg-surface-container-low border border-outline-variant/40 text-on-surface text-body-sm focus:outline-none"
@@ -383,11 +473,11 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
                           <input
                             type="number"
                             min={1}
-                            value={honorForm[m.employee.id]?.volume ?? 1}
+                            value={honorForm[m.id]?.volume ?? 1}
                             onChange={(e) =>
                               setHonorForm((prev) => ({
                                 ...prev,
-                                [m.employee.id]: { ...prev[m.employee.id], honor_type_id: prev[m.employee.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0, volume: Number(e.target.value) },
+                                [m.id]: { ...prev[m.id], honor_type_id: prev[m.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0, volume: Number(e.target.value) },
                               }))
                             }
                             className="w-16 h-8 text-center rounded bg-surface-container-low border border-outline-variant/40 font-mono text-body-sm focus:outline-none"
@@ -460,6 +550,32 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
             <span className="text-on-surface-variant">Anggaran Kegiatan</span>
             <span className="text-on-surface font-medium font-currency-cell text-currency-cell">{formatRupiah(info.budget_amount)}</span>
           </div>
+          <div className="p-space-md rounded-lg border border-outline-variant/40 bg-surface-container-low flex flex-col sm:flex-row sm:items-center gap-space-sm">
+            <div className="flex-1">
+              <div className="font-label-md text-label-md font-semibold text-on-surface">SK Panitia (wajib)</div>
+              <div className="font-body-sm text-body-sm text-on-surface-variant">
+                {skPanitiaName
+                  ? `Terunggah: ${skPanitiaName}`
+                  : 'Scan SK Panitia yang sudah ditandatangani (PDF/JPG/PNG, maks. 5 MB). Ikut dikirim ke Sianggar.'}
+              </div>
+            </div>
+            <input
+              ref={skInput}
+              type="file"
+              accept="application/pdf,image/jpeg,image/png"
+              onChange={handleUploadSk}
+              className="hidden"
+            />
+            <button
+              type="button"
+              disabled={uploadingSk}
+              onClick={() => skInput.current?.click()}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold border border-outline-variant/40 disabled:opacity-50"
+            >
+              <Icon name={skPanitiaName ? 'check_circle' : 'upload_file'} className="text-[18px]" />
+              <span>{uploadingSk ? 'Mengunggah...' : skPanitiaName ? 'Ganti' : 'Unggah SK'}</span>
+            </button>
+          </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
             Setelah disubmit, pengajuan akan masuk ke antrean approval Kepala Sekolah dan tidak dapat diubah sampai disetujui atau ditolak.
           </p>
@@ -474,7 +590,8 @@ export function CreateActivityWizard({ activityTypes, units, fundSources, honorT
             <button
               type="button"
               onClick={handleSubmitActivity}
-              disabled={submitting}
+              disabled={submitting || !skPanitiaName}
+              title={skPanitiaName ? undefined : 'Unggah SK Panitia terlebih dahulu'}
               className="px-space-xl py-space-sm rounded-lg bg-primary hover:bg-primary-container text-white font-label-md text-label-md font-semibold shadow-xs disabled:opacity-50"
             >
               {submitting ? 'Mengirim...' : 'Kirim Pengajuan'}

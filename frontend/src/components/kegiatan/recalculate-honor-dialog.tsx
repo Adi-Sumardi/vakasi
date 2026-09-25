@@ -35,10 +35,10 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
   const [rows, setRows] = useState<Record<number, Row>>(() =>
     Object.fromEntries(
       members.map((member) => {
-        const existing = activity.honor_details?.find((d) => d.employee.id === member.employee.id);
+        const existing = activity.honor_details?.find((d) => d.activity_member_id === member.id);
 
         return [
-          member.employee.id,
+          member.id,
           {
             honor_type_id: existing?.honor_type.id ?? honorTypes[0]?.id ?? 0,
             volume: existing?.volume ?? 1,
@@ -48,8 +48,16 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
     )
   );
 
-  function setRow(employeeId: number, patch: Partial<Row>) {
-    setRows((prev) => ({ ...prev, [employeeId]: { ...prev[employeeId], ...patch } }));
+  // Keyed by member, not employee: one employee can hold two roles on
+  // the same activity, and each role is paid on its own line.
+  function setRow(memberId: number, patch: Partial<Row>) {
+    setRows((prev) => ({ ...prev, [memberId]: { ...prev[memberId], ...patch } }));
+  }
+
+  const [bulk, setBulk] = useState<Row>({ honor_type_id: honorTypes[0]?.id ?? 0, volume: 1 });
+
+  function applyToAll() {
+    setRows(Object.fromEntries(members.map((member) => [member.id, { ...bulk }])));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -59,9 +67,9 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
       const result = await calculateHonor(
         activity.id,
         members.map((member) => ({
-          employee_id: member.employee.id,
-          honor_type_id: Number(rows[member.employee.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0),
-          volume: Number(rows[member.employee.id]?.volume ?? 1),
+          activity_member_id: member.id,
+          honor_type_id: Number(rows[member.id]?.honor_type_id ?? honorTypes[0]?.id ?? 0),
+          volume: Number(rows[member.id]?.volume ?? 1),
         }))
       );
       toast.success(`Honor berhasil dihitung ulang. Total netto ${formatRupiah(result.net_amount)}.`);
@@ -74,13 +82,13 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
     }
   }
 
-  async function handleRemoveMember(memberId: number, employeeId: number) {
+  async function handleRemoveMember(memberId: number) {
     setBusy(true);
     try {
       await removeActivityMember(activity.id, memberId);
       setRows((prev) => {
         const next = { ...prev };
-        delete next[employeeId];
+        delete next[memberId];
         return next;
       });
       toast.success('Peserta dan honornya berhasil dihapus.');
@@ -123,6 +131,46 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-space-md">
+              {members.length > 1 && (
+                <div className="flex flex-wrap items-end gap-2 p-space-sm rounded-lg border border-dashed border-outline-variant">
+                  <div>
+                    <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">
+                      Jenis Honor (semua)
+                    </label>
+                    <select
+                      value={bulk.honor_type_id}
+                      onChange={(e) => setBulk({ ...bulk, honor_type_id: Number(e.target.value) })}
+                      className="w-48 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
+                    >
+                      {honorTypes.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({t.unit})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">
+                      Volume
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={bulk.volume}
+                      onChange={(e) => setBulk({ ...bulk, volume: Number(e.target.value) })}
+                      className="w-24 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={applyToAll}
+                    className="h-9 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold border border-outline-variant/30"
+                  >
+                    Terapkan ke {members.length} peserta
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-col gap-space-sm">
                 {members.map((member) => (
                   <div
@@ -140,8 +188,8 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
                         Jenis Honor
                       </label>
                       <select
-                        value={rows[member.employee.id]?.honor_type_id ?? ''}
-                        onChange={(e) => setRow(member.employee.id, { honor_type_id: Number(e.target.value) })}
+                        value={rows[member.id]?.honor_type_id ?? ''}
+                        onChange={(e) => setRow(member.id, { honor_type_id: Number(e.target.value) })}
                         className="w-full sm:w-48 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
                       >
                         {honorTypes.map((t) => (
@@ -159,15 +207,15 @@ export function RecalculateHonorDialog({ activity, honorTypes }: Props) {
                         type="number"
                         min={1}
                         required
-                        value={rows[member.employee.id]?.volume ?? 1}
-                        onChange={(e) => setRow(member.employee.id, { volume: Number(e.target.value) })}
+                        value={rows[member.id]?.volume ?? 1}
+                        onChange={(e) => setRow(member.id, { volume: Number(e.target.value) })}
                         className="w-full sm:w-24 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:outline-none"
                       />
                     </div>
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => handleRemoveMember(member.id, member.employee.id)}
+                      onClick={() => handleRemoveMember(member.id)}
                       title="Hapus peserta beserta honornya"
                       className="h-9 px-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-50"
                     >

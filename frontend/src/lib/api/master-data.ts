@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, apiUpload } from '@/lib/api/client';
 
 /**
  * Only active master data may be attached to a new activity — the API
@@ -29,6 +29,11 @@ export type HonorRate = {
   honor_type: HonorType;
   unit: Unit | null;
   rate: number;
+  /** Nomor SK Yayasan yang menetapkan tarif ini. */
+  decree_number: string | null;
+  decree_date: string | null;
+  decree_file_name: string | null;
+  has_decree_file: boolean;
   effective_from: string;
   effective_to: string | null;
   status: string;
@@ -76,6 +81,8 @@ export type CreateHonorRateInput = {
   honor_type_id: number;
   unit_id?: number;
   rate: number;
+  decree_number: string;
+  decree_date?: string;
   effective_from: string;
   effective_to?: string;
 };
@@ -87,3 +94,13 @@ export const updateHonorRate = (
   id: number,
   input: Partial<CreateHonorRateInput> & { status?: 'active' | 'inactive' }
 ): Promise<HonorRate> => apiFetch(`/api/v1/honor-rates/${id}`, { method: 'PUT', body: input });
+
+export function uploadHonorRateDecree(id: number, file: File): Promise<HonorRate> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return apiUpload<HonorRate>(`/api/v1/honor-rates/${id}/decree`, formData);
+}
+
+export const honorRateDecreeUrl = (id: number) =>
+  `${process.env.NEXT_PUBLIC_API_URL}/api/v1/honor-rates/${id}/decree`;

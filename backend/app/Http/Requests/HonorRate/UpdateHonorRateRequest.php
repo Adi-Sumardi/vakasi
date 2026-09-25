@@ -35,6 +35,8 @@ class UpdateHonorRateRequest extends FormRequest
             'honor_type_id' => ['sometimes', 'exists:honor_types,id'],
             'unit_id' => ['nullable', 'exists:units,id'],
             'rate' => ['sometimes', 'integer', 'min:1'],
+            'decree_number' => ['sometimes', 'required', 'string', 'max:100'],
+            'decree_date' => ['nullable', 'date'],
             'effective_from' => [
                 'sometimes',
                 'date',

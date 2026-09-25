@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { listAllDocumentsServer } from '@/lib/api/documents.server';
 
 const DOCUMENT_TYPE_LABEL: Record<string, string> = {
+  sk_panitia: 'SK Panitia',
   surat_tugas: 'Surat Tugas',
   daftar_hadir: 'Daftar Hadir',
   rincian_anggaran: 'Rincian Anggaran',

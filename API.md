@@ -108,7 +108,7 @@ POST   /activities
 GET    /activities/{id}
 PUT    /activities/{id}
 DELETE /activities/{id}
-POST   /activities/{id}/submit
+POST   /activities/{id}/submit    # 422 bila belum ada anggota, honor, atau dokumen `sk_panitia`
 POST   /activities/{id}/cancel
 ```
 
@@ -117,6 +117,7 @@ POST   /activities/{id}/cancel
 ``` http
 GET    /activities/{id}/members
 POST   /activities/{id}/members
+POST   /activities/{id}/members/bulk   # {employee_ids: [..], role_name}; semua-atau-tidak-sama-sekali
 PUT    /activities/{id}/members/{memberId}
 DELETE /activities/{id}/members/{memberId}
 ```
@@ -127,7 +128,9 @@ DELETE /activities/{id}/members/{memberId}
 GET  /honor-types
 POST /honor-types
 GET  /honor-rates
-POST /honor-rates
+POST /honor-rates                  # decree_number (nomor SK Yayasan) wajib
+POST /honor-rates/{id}/decree      # multipart `file`: scan SK tarif (PDF/JPG/PNG, maks. 5 MB)
+GET  /honor-rates/{id}/decree
 
 POST /activities/{id}/calculate-honor
 GET  /activities/{id}/honors
@@ -139,13 +142,17 @@ Calculation request:
 {
   "items": [
     {
-      "employee_id": 10,
+      "activity_member_id": 31,
       "honor_type_id": 2,
       "volume": 8
     }
   ]
 }
 ```
+
+`activity_member_id` menentukan peran yang dibayar. `employee_id` masih
+diterima sebagai pengganti selama pegawai itu hanya memegang satu peran
+pada kegiatan tersebut; bila lebih dari satu, request ditolak (422).
 
 Response:
 

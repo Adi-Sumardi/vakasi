@@ -1,18 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
-import { createHonorRate, updateHonorRate, type HonorRate, type HonorType, type Unit } from '@/lib/api/master-data';
+import {
+  createHonorRate,
+  honorRateDecreeUrl,
+  updateHonorRate,
+  uploadHonorRateDecree,
+  type HonorRate,
+  type HonorType,
+  type Unit,
+} from '@/lib/api/master-data';
 import { formatRupiah } from '@/lib/format';
 
 type FormState = {
   honor_type_id: number;
   unit_id: number | '';
   rate: number;
+  decree_number: string;
+  decree_date: string;
   effective_from: string;
   effective_to: string;
 };
@@ -22,6 +32,8 @@ function emptyForm(honorTypes: HonorType[]): FormState {
     honor_type_id: honorTypes[0]?.id ?? 0,
     unit_id: '',
     rate: 25000,
+    decree_number: '',
+    decree_date: '',
     effective_from: new Date().toISOString().slice(0, 10),
     effective_to: '',
   };
@@ -34,10 +46,14 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm(honorTypes));
+  const [decreeFile, setDecreeFile] = useState<File | null>(null);
+  const uploadTarget = useRef<number | null>(null);
+  const rowFileInput = useRef<HTMLInputElement>(null);
 
   function openCreate() {
     setEditingId(null);
     setForm(emptyForm(honorTypes));
+    setDecreeFile(null);
     setOpen(true);
   }
 
@@ -47,9 +63,12 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
       honor_type_id: rate.honor_type.id,
       unit_id: rate.unit?.id ?? '',
       rate: rate.rate,
+      decree_number: rate.decree_number ?? '',
+      decree_date: rate.decree_date ?? '',
       effective_from: rate.effective_from,
       effective_to: rate.effective_to ?? '',
     });
+    setDecreeFile(null);
     setOpen(true);
   }
 
@@ -60,17 +79,17 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
       honor_type_id: Number(form.honor_type_id),
       unit_id: form.unit_id === '' ? undefined : Number(form.unit_id),
       rate: Number(form.rate),
+      decree_number: form.decree_number.trim(),
+      decree_date: form.decree_date || undefined,
       effective_from: form.effective_from,
       effective_to: form.effective_to || undefined,
     };
     try {
-      if (editingId) {
-        await updateHonorRate(editingId, payload);
-        toast.success('Tarif honor berhasil diperbarui.');
-      } else {
-        await createHonorRate(payload);
-        toast.success('Tarif honor berhasil ditambahkan.');
+      const saved = editingId ? await updateHonorRate(editingId, payload) : await createHonorRate(payload);
+      if (decreeFile) {
+        await uploadHonorRateDecree(saved.id, decreeFile);
       }
+      toast.success(editingId ? 'Tarif honor berhasil diperbarui.' : 'Tarif honor berhasil ditambahkan.');
       setOpen(false);
       router.refresh();
     } catch (error) {
@@ -94,13 +113,38 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
     }
   }
 
+  async function handleRowUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const id = uploadTarget.current;
+    if (!file || !id) return;
+    setBusyId(id);
+    try {
+      await uploadHonorRateDecree(id, file);
+      toast.success('Berkas SK tarif berhasil diunggah.');
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'Gagal mengunggah berkas SK.');
+    } finally {
+      setBusyId(null);
+      if (rowFileInput.current) rowFileInput.current.value = '';
+    }
+  }
+
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
+      <input
+        ref={rowFileInput}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        onChange={handleRowUpload}
+        className="hidden"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">Tarif Honor</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            Tarif per jenis honor, berlaku sesuai periode. Perubahan tarif tidak mengubah honor yang sudah dihitung.
+            Tarif per jenis honor sesuai SK Yayasan yang berlaku. Perubahan tarif tidak mengubah honor yang sudah
+            dihitung.
           </p>
         </div>
         <button
@@ -124,6 +168,7 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                   <th className="px-space-base py-space-sm font-bold">Jenis Honor</th>
                   <th className="px-space-base py-space-sm font-bold">Unit</th>
                   <th className="px-space-base py-space-sm text-right font-bold">Tarif</th>
+                  <th className="px-space-base py-space-sm font-bold">Dasar SK</th>
                   <th className="px-space-base py-space-sm font-bold">Berlaku</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Status</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Aksi</th>
@@ -137,6 +182,25 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                     </td>
                     <td className="px-space-base py-space-sm text-on-surface-variant">{r.unit?.name ?? 'Semua Unit'}</td>
                     <td className="px-space-base py-space-sm text-right font-currency-cell text-currency-cell">{formatRupiah(r.rate)}</td>
+                    <td className="px-space-base py-space-sm">
+                      {r.decree_number ? (
+                        <div className="text-on-surface">{r.decree_number}</div>
+                      ) : (
+                        <div className="text-error text-xs font-semibold">Belum ada nomor SK</div>
+                      )}
+                      {r.has_decree_file ? (
+                        <a
+                          href={honorRateDecreeUrl(r.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary text-xs hover:underline"
+                        >
+                          {r.decree_file_name ?? 'Lihat berkas SK'}
+                        </a>
+                      ) : (
+                        <div className="text-outline text-xs">Berkas SK belum diunggah</div>
+                      )}
+                    </td>
                     <td className="px-space-base py-space-sm text-on-surface-variant">
                       {r.effective_from}{r.effective_to ? ` - ${r.effective_to}` : ' - sekarang'}
                     </td>
@@ -154,6 +218,18 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                           className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors"
                         >
                           <Icon name="edit" className="text-[18px]" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyId === r.id}
+                          onClick={() => {
+                            uploadTarget.current = r.id;
+                            rowFileInput.current?.click();
+                          }}
+                          title="Unggah berkas SK tarif"
+                          className="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-primary-fixed transition-colors disabled:opacity-50"
+                        >
+                          <Icon name="upload_file" className="text-[18px]" />
                         </button>
                         <button
                           type="button"
@@ -218,6 +294,38 @@ export function HonorRateManager({ rates, honorTypes, units }: { rates: HonorRat
                   value={form.rate}
                   onChange={(e) => setForm({ ...form, rate: Number(e.target.value) })}
                   className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm font-mono focus:bg-surface-container-lowest focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-[1fr_auto] gap-3">
+                <div>
+                  <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Nomor SK Yayasan</label>
+                  <input
+                    required
+                    value={form.decree_number}
+                    onChange={(e) => setForm({ ...form, decree_number: e.target.value })}
+                    placeholder="Contoh: 012/SK/YAPI/VII/2026"
+                    className="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:bg-surface-container-lowest focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">Tanggal SK</label>
+                  <input
+                    type="date"
+                    value={form.decree_date}
+                    onChange={(e) => setForm({ ...form, decree_date: e.target.value })}
+                    className="h-9 px-3 rounded-lg bg-surface-container-low border border-outline-variant/40 text-on-surface font-body-sm text-body-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="font-label-sm text-label-sm text-secondary uppercase font-semibold block mb-1">
+                  Berkas SK (PDF/JPG/PNG, opsional — bisa diunggah nanti)
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf,image/jpeg,image/png"
+                  onChange={(e) => setDecreeFile(e.target.files?.[0] ?? null)}
+                  className="w-full font-body-sm text-body-sm text-on-surface"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">

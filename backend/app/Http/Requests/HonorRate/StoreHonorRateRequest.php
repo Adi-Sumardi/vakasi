@@ -21,6 +21,10 @@ class StoreHonorRateRequest extends FormRequest
             'honor_type_id' => ['required', 'exists:honor_types,id'],
             'unit_id' => ['nullable', 'exists:units,id'],
             'rate' => ['required', 'integer', 'min:1'],
+            // A new tariff must name the SK Yayasan it comes from; the
+            // scan itself is uploaded separately (HonorRateController::uploadDecree).
+            'decree_number' => ['required', 'string', 'max:100'],
+            'decree_date' => ['nullable', 'date'],
             'effective_from' => [
                 'required',
                 'date',

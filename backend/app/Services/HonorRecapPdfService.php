@@ -4,12 +4,13 @@ namespace App\Services;
 
 use App\Models\Activity;
 use App\Models\ApprovalLog;
+use App\Models\Document;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Builds the honor recap PDF that VAKASI attaches to the handoff, so the
  * document Sianggar files with the pengajuan is authored by the system
- * that owns the approval — it carries VAKASI's SK number and the same
+ * that owns the approval — it carries VAKASI's approval number (APV-...) and the same
  * public verification QR, and can be checked by anyone without a VAKASI
  * account.
  *
@@ -29,17 +30,17 @@ class HonorRecapPdfService
     public function render(Activity $activity): string
     {
         $activity->loadMissing([
-            'activityType', 'unit', 'fundSource', 'creator',
-            'members.employee', 'honorDetails.employee', 'honorDetails.honorType',
+            'activityType', 'unit', 'fundSource', 'creator', 'documents',
+            'honorDetails.employee', 'honorDetails.honorType', 'honorDetails.activityMember',
         ]);
-
-        $roleByEmployeeId = $activity->members
-            ->mapWithKeys(fn ($member) => [$member->employee_id => $member->role_name]);
 
         $lines = $activity->honorDetails->map(fn ($detail) => [
             'employee_name' => $detail->employee->name,
-            'role_name' => $roleByEmployeeId[$detail->employee_id] ?? null,
+            // Through the member row, not the employee: one employee can
+            // hold several roles on the same activity.
+            'role_name' => $detail->activityMember?->role_name,
             'honor_type' => $detail->honorType?->name,
+            'rate_decree_number' => $detail->rate_decree_number_snapshot,
             'rate' => (int) $detail->rate_snapshot,
             'volume' => (int) $detail->volume,
             'unit' => $detail->unit_snapshot,
@@ -47,6 +48,14 @@ class HonorRecapPdfService
             'bank_name' => $detail->employee->bank_name,
             'bank_account_number' => $detail->employee->bank_account_number,
         ])->values();
+
+        // What the payment rests on: the signed SK Panitia (who is on the
+        // committee) and the SK tarif (how much each role is paid).
+        $skPanitia = $activity->documents
+            ->where('document_type', Document::SK_PANITIA)
+            ->pluck('file_name')
+            ->values();
+        $rateDecrees = $lines->pluck('rate_decree_number')->filter()->unique()->values();
 
         $totalAmount = (int) $lines->sum('amount');
 
@@ -61,6 +70,8 @@ class HonorRecapPdfService
             'activity' => $activity,
             'lines' => $lines,
             'totalAmount' => $totalAmount,
+            'skPanitia' => $skPanitia,
+            'rateDecrees' => $rateDecrees,
             'terbilang' => $this->terbilang($totalAmount),
             'approverName' => $approverName,
             'qrCodeDataUri' => $activity->verification_code

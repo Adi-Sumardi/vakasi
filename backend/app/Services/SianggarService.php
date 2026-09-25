@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\Document;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /**
@@ -43,13 +46,9 @@ class SianggarService
     public function payloadFor(Activity $activity): array
     {
         $activity->loadMissing([
-            'activityType', 'unit', 'fundSource', 'pic',
-            'honorDetails.employee.unit', 'honorDetails.honorType',
-            'members.employee',
+            'activityType', 'unit', 'fundSource', 'pic', 'documents',
+            'honorDetails.employee.unit', 'honorDetails.honorType', 'honorDetails.activityMember',
         ]);
-
-        $roleByEmployeeId = $activity->members
-            ->mapWithKeys(fn ($member) => [$member->employee_id => $member->role_name]);
 
         $honors = $activity->honorDetails->map(fn ($detail) => [
             'employee' => [
@@ -62,9 +61,14 @@ class SianggarService
                 'bank_account_name' => $detail->employee->bank_account_name,
                 'bank_account_number' => $detail->employee->bank_account_number,
             ],
-            'role_name' => $roleByEmployeeId[$detail->employee_id] ?? null,
+            // Through the member row, not the employee: one employee can
+            // hold several roles on the same activity, one line each.
+            'role_name' => $detail->activityMember?->role_name,
             'honor_type' => $detail->honorType?->name,
             'rate' => (int) $detail->rate_snapshot,
+            // The SK Yayasan the rate was taken from, as snapshotted at
+            // calculation time.
+            'rate_decree_number' => $detail->rate_decree_number_snapshot,
             'volume' => (int) $detail->volume,
             'satuan' => $detail->unit_snapshot,
             'amount' => (int) $detail->net_amount,
@@ -92,6 +96,16 @@ class SianggarService
                     : null,
             ],
             'honors' => $honors,
+            // Mirrors the `lampiran_tambahan[i]` parts of the request, in
+            // the same order, so Sianggar can tell SK Panitia from a
+            // daftar hadir without guessing from file names.
+            'documents' => $this->handoffDocuments($activity)
+                ->map(fn (Document $document, int $i) => [
+                    'field' => "lampiran_tambahan[{$i}]",
+                    'document_type' => $document->document_type,
+                    'label' => Document::LABELS[$document->document_type] ?? $document->document_type,
+                    'file_name' => $this->handoffFileName($document),
+                ])->values(),
             'total_amount' => (int) $activity->honorDetails->sum('net_amount'),
             // Where Sianggar should report progress back to, so the
             // callback URL is never hard-coded on their side.
@@ -121,7 +135,7 @@ class SianggarService
         $signature = hash_hmac('sha256', $payload, (string) config('vakasi.sianggar.secret'));
 
         try {
-            $response = Http::withHeaders([
+            $request = Http::withHeaders([
                 // Signed over the payload part only — a multipart boundary
                 // is generated per request and is not stable to sign.
                 'X-Vakasi-Signature' => $signature,
@@ -131,10 +145,22 @@ class SianggarService
             ])
                 ->timeout((int) config('vakasi.sianggar.timeout'))
                 ->attach('lampiran', $this->recapPdf->render($activity), $this->recapPdf->fileName($activity))
-                ->acceptJson()
-                ->post((string) config('vakasi.sianggar.url'), [
-                    ['name' => 'payload', 'contents' => $payload],
-                ]);
+                ->acceptJson();
+
+            // SK Panitia and the other supporting documents travel with
+            // the recap, so SDM reviews the committee decree in Sianggar
+            // instead of asking the school for it separately.
+            foreach ($this->handoffDocuments($activity)->values() as $i => $document) {
+                $request->attach(
+                    "lampiran_tambahan[{$i}]",
+                    Storage::disk('local')->get($document->file_path),
+                    $this->handoffFileName($document),
+                );
+            }
+
+            $response = $request->post((string) config('vakasi.sianggar.url'), [
+                ['name' => 'payload', 'contents' => $payload],
+            ]);
         } catch (ConnectionException $e) {
             $this->markFailed($activity, $e->getMessage());
 
@@ -158,6 +184,31 @@ class SianggarService
             'sianggar_status' => Activity::SIANGGAR_SENT,
             'attempts' => $activity->sianggar_attempts,
         ]);
+    }
+
+    /**
+     * Activity documents that are still on disk, SK Panitia first. A
+     * missing file is skipped rather than failing the whole handoff —
+     * the payload lists only what was actually attached.
+     *
+     * @return Collection<int, Document>
+     */
+    private function handoffDocuments(Activity $activity): Collection
+    {
+        return $activity->documents
+            ->filter(fn (Document $document) => Storage::disk('local')->exists($document->file_path))
+            ->sortBy(fn (Document $document) => [
+                $document->document_type === Document::SK_PANITIA ? 0 : 1,
+                $document->id,
+            ])
+            ->values();
+    }
+
+    private function handoffFileName(Document $document): string
+    {
+        $label = Document::LABELS[$document->document_type] ?? $document->document_type;
+
+        return "{$label} - {$document->file_name}";
     }
 
     private function markSkipped(Activity $activity): void

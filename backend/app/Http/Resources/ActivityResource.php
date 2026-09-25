@@ -30,7 +30,7 @@ class ActivityResource extends JsonResource
             'approved_at' => $this->approved_at,
             'completed_at' => $this->completed_at,
             'verification_code' => $this->verification_code,
-            // Nomor SK dihasilkan ApprovalService::approve() dan dipakai
+            // Nomor persetujuan (APV-...) dihasilkan ApprovalService::approve() dan dipakai
             // kartu "Bukti Approval" di halaman detail — tanpa baris ini
             // nomornya tersimpan di database tapi tidak pernah sampai ke UI.
             'approval_document_number' => $this->approval_document_number,

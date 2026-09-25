@@ -162,6 +162,7 @@ class FinancialIntegrityTest extends TestCase
         $payload = fn (string $from, ?string $to) => [
             'honor_type_id' => $honorType->id,
             'rate' => 25000,
+            'decree_number' => 'SK-YAPI/2026/001',
             'effective_from' => $from,
             'effective_to' => $to,
         ];

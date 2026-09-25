@@ -43,7 +43,7 @@ class HonorController extends Controller
     {
         $this->authorize('view', $activity);
 
-        $details = $activity->honorDetails()->with(['employee', 'honorType'])->get();
+        $details = $activity->honorDetails()->with(['employee', 'honorType', 'activityMember'])->get();
 
         return $this->success(HonorDetailResource::collection($details));
     }

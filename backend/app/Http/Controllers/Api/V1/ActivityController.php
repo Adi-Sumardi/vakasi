@@ -61,7 +61,7 @@ class ActivityController extends Controller
 
         return $this->success(new ActivityResource($activity->load([
             'activityType', 'unit', 'fundSource', 'pic', 'creator', 'budget',
-            'members.employee', 'honorDetails.employee', 'honorDetails.honorType',
+            'members.employee', 'honorDetails.employee', 'honorDetails.honorType', 'honorDetails.activityMember',
             'approvals.approver', 'approvals.logs.actor', 'documents',
         ])));
     }

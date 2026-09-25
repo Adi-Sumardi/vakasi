@@ -110,7 +110,7 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                 <table className="w-full text-left font-body-sm text-body-sm border-collapse">
                   <thead className="bg-surface-container-low text-on-surface-variant uppercase font-label-sm text-label-sm border-y border-outline-variant/30">
                     <tr>
-                      <th className="px-space-lg py-space-sm font-bold">Nama</th>
+                      <th className="px-space-lg py-space-sm font-bold">Nama / Peran</th>
                       <th className="px-space-lg py-space-sm font-bold">Jenis Honor</th>
                       <th className="px-space-lg py-space-sm text-center font-bold">Volume</th>
                       <th className="px-space-lg py-space-sm text-right font-bold">Netto</th>
@@ -120,8 +120,14 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                   <tbody className="divide-y divide-surface-container-low">
                     {activity.honor_details?.map((d) => (
                       <tr key={d.id}>
-                        <td className="px-space-lg py-space-sm font-medium text-on-surface">{d.employee.name}</td>
-                        <td className="px-space-lg py-space-sm text-on-surface-variant">{d.honor_type.name}</td>
+                        <td className="px-space-lg py-space-sm">
+                          <div className="font-medium text-on-surface">{d.employee.name}</div>
+                          {d.role_name && <div className="text-outline text-xs">{d.role_name}</div>}
+                        </td>
+                        <td className="px-space-lg py-space-sm text-on-surface-variant">
+                          <div>{d.honor_type.name}</div>
+                          {d.rate_decree_number && <div className="text-outline text-xs">SK Tarif: {d.rate_decree_number}</div>}
+                        </td>
                         <td className="px-space-lg py-space-sm text-center">{d.volume} {d.unit_snapshot}</td>
                         <td className="px-space-lg py-space-sm text-right font-currency-cell text-currency-cell text-primary font-bold">
                           {formatRupiah(d.net_amount)}

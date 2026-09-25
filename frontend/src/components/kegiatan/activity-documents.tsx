@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { uploadActivityDocument } from '@/lib/api/documents';
-import type { ActivityDocument } from '@/lib/api/activities';
+import { SK_PANITIA, type ActivityDocument } from '@/lib/api/activities';
 
 const DOCUMENT_TYPES = [
+  { value: SK_PANITIA, label: 'SK Panitia' },
   { value: 'surat_tugas', label: 'Surat Tugas' },
   { value: 'daftar_hadir', label: 'Daftar Hadir' },
   { value: 'rincian_anggaran', label: 'Rincian Anggaran' },
@@ -35,6 +36,7 @@ export function ActivityDocuments({
   const [busy, setBusy] = useState(false);
   const [documentType, setDocumentType] = useState(DOCUMENT_TYPES[0].value);
   const fileInput = useRef<HTMLInputElement>(null);
+  const hasSkPanitia = documents.some((d) => d.document_type === SK_PANITIA);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -87,6 +89,16 @@ export function ActivityDocuments({
           </div>
         )}
       </div>
+
+      {canUpload && !hasSkPanitia && (
+        <div className="flex items-start gap-space-xs mb-space-md p-space-sm rounded-lg bg-error-container/40 text-on-error-container font-body-sm text-body-sm">
+          <Icon name="error" className="text-[18px] shrink-0" />
+          <span>
+            Unggah <strong>SK Panitia</strong> yang sudah ditandatangani. Kegiatan tidak bisa diajukan tanpa SK
+            Panitia, dan dokumen ini ikut dikirim ke Sianggar setelah disetujui.
+          </span>
+        </div>
+      )}
 
       {documents.length === 0 ? (
         <p className="font-body-sm text-body-sm text-on-surface-variant">Belum ada dokumen diunggah.</p>

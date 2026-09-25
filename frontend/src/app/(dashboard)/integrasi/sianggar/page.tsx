@@ -45,7 +45,7 @@ export default async function SianggarIntegrationPage() {
               <thead className="bg-surface-container-low text-on-surface-variant uppercase font-label-sm text-label-sm border-b border-outline-variant/30">
                 <tr>
                   <th className="px-space-base py-space-sm font-bold">Kegiatan</th>
-                  <th className="px-space-base py-space-sm font-bold">No. SK</th>
+                  <th className="px-space-base py-space-sm font-bold">No. Persetujuan</th>
                   <th className="px-space-base py-space-sm text-right font-bold">Anggaran</th>
                   <th className="px-space-base py-space-sm text-center font-bold">Status Kirim</th>
                   <th className="px-space-base py-space-sm font-bold">Keterangan</th>

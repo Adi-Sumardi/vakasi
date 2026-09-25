@@ -103,6 +103,13 @@ SUBMITTED → REJECTED → DRAFT
 5.  TU memilih unit dan sumber dana.
 6.  TU mengisi anggaran.
 7.  TU menyimpan sebagai DRAFT.
+8.  TU menambahkan panitia --- bisa banyak pegawai sekaligus untuk satu
+    peran (`POST /activities/{id}/members/bulk`, semua-atau-tidak-sama-sekali).
+    Satu pegawai boleh memegang lebih dari satu peran (mis. Pengawas dan
+    Korektor); tiap peran adalah baris `activity_members` sendiri dan
+    dibayar di baris honor sendiri.
+9.  TU mengunggah **SK Panitia** yang sudah ditandatangani (dokumen
+    `sk_panitia`). Kegiatan **tidak bisa disubmit** tanpa dokumen ini.
 
 ## 5. Honor Calculation Flow
 
@@ -121,6 +128,18 @@ Potongan / Pajak
     ↓
 Net Honor
 ```
+
+-   Tarif Aktif dipilih dari master tarif berdasarkan tanggal mulai
+    kegiatan (tarif khusus unit didahulukan atas tarif umum).
+-   Setiap tarif wajib mencatat **nomor SK Yayasan** yang menetapkannya
+    (`honor_rates.decree_number`), dan berkas scan SK dapat dilampirkan
+    (`POST /honor-rates/{id}/decree`).
+-   Nomor SK tarif di-snapshot ke `honor_details.rate_decree_number_snapshot`
+    bersama `rate_snapshot`, sehingga SK baru tidak mengubah dasar honor
+    yang sudah dihitung.
+-   Baris honor diikat ke keanggotaan (`activity_member_id`), bukan ke
+    pegawai; permintaan hitung yang hanya membawa `employee_id` ditolak
+    bila pegawai itu memegang lebih dari satu peran.
 
 ## 6. Approval Flow
 
@@ -198,7 +217,7 @@ Detail per langkah:
     publik `{FRONTEND_URL}/verify/{code}` --- tanpa login, mirip pola
     verifikasi ijazah/sertifikat online (`GET /api/v1/public/verify/{code}`
     dan `/qrcode`, di luar `auth:sanctum`, menampilkan nomor dokumen
-    approval (`approval_document_number`, format `SK-{tahun}-{urut}`),
+    approval (`approval_document_number`, format `APV-{tahun}-{urut}`; nomor lama berawalan `SK-` tetap sah),
     kode/nama/jenis kegiatan, sumber dana, unit, lokasi, status,
     tanggal, approver, dan daftar nama+peran peserta --- tidak pernah
     nominal honor atau anggaran). QR yang sama juga tercetak di slip honor PDF.
@@ -215,6 +234,13 @@ Detail per langkah:
     header `X-Vakasi-Signature` --- skema yang sama dengan webhook
     mesin fingerprint milik SiHaris. `X-Idempotency-Key` berisi
     `activity_code` agar pengiriman ulang tidak membuat entri ganda.
+
+    Selain PDF rekap (`lampiran`), setiap dokumen kegiatan --- SK Panitia
+    lebih dulu, lalu surat tugas, daftar hadir, dst. --- ikut dikirim
+    sebagai `lampiran_tambahan[i]` dengan nama berkas `<Label> - <nama asli>`.
+    Metadatanya ada di `payload.documents` (urutan sama dengan part-nya).
+    Setiap baris `honors` membawa `role_name` (dari keanggotaan) dan
+    `rate_decree_number` (nomor SK tarif yang di-snapshot).
 
     Hasil pengiriman dicatat di kolom `activities.siharis_status`
     (`pending`/`sent`/`failed`/`skipped`), `siharis_synced_at`,

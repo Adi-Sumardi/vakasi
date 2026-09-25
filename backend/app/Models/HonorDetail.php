@@ -17,6 +17,7 @@ class HonorDetail extends Model
         'employee_id',
         'honor_type_id',
         'rate_snapshot',
+        'rate_decree_number_snapshot',
         'volume',
         'unit_snapshot',
         'gross_amount',

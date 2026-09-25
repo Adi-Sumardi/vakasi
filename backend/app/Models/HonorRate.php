@@ -15,6 +15,10 @@ class HonorRate extends Model
         'honor_type_id',
         'unit_id',
         'rate',
+        'decree_number',
+        'decree_date',
+        'decree_file_name',
+        'decree_file_path',
         'effective_from',
         'effective_to',
         'status',
@@ -23,6 +27,7 @@ class HonorRate extends Model
     protected function casts(): array
     {
         return [
+            'decree_date' => 'date',
             'effective_from' => 'date',
             'effective_to' => 'date',
         ];

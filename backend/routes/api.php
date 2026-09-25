@@ -86,6 +86,13 @@ Route::prefix('v1')->group(function () {
             });
         }
 
+        // The SK Yayasan behind a tariff, so reviewers can check the rate
+        // against the signed decree rather than trusting the master.
+        Route::middleware('permission:honor-rates.view')
+            ->get('/honor-rates/{honorRate}/decree', [HonorRateController::class, 'downloadDecree']);
+        Route::middleware('permission:honor-rates.manage')
+            ->post('/honor-rates/{honorRate}/decree', [HonorRateController::class, 'uploadDecree']);
+
         Route::middleware('permission:employees.view')->group(function () {
             Route::get('/employees', [EmployeeController::class, 'index']);
             Route::get('/employees/{employee}', [EmployeeController::class, 'show']);
@@ -113,6 +120,9 @@ Route::prefix('v1')->group(function () {
             Route::delete('/activities/{activity}', [ActivityController::class, 'destroy']);
             Route::post('/activities/{activity}/cancel', [ActivityController::class, 'cancel']);
             Route::post('/activities/{activity}/members', [ActivityMemberController::class, 'store']);
+            // A committee of 20-30 people shares a handful of roles; adding
+            // them one request at a time is where input errors creep in.
+            Route::post('/activities/{activity}/members/bulk', [ActivityMemberController::class, 'storeMany']);
             // scopeBindings(): resolve {member} through $activity->members(),
             // not globally by id. Without it, authorizing against {activity}
             // while acting on a {member} that belongs to a *different*

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\PushApprovedActivityToSianggar;
 use App\Models\Activity;
 use App\Models\Approval;
+use App\Models\Document;
 use App\Models\User;
 use App\Services\Concerns\RetriesUniqueNumber;
 use App\Services\Exceptions\BusinessValidationException;
@@ -38,6 +39,10 @@ class ApprovalService
 
         if (! $activity->honorDetails()->exists()) {
             throw new BusinessValidationException('honor', 'Kegiatan harus memiliki perhitungan honor sebelum disubmit.');
+        }
+
+        if (! $activity->documents()->where('document_type', Document::SK_PANITIA)->exists()) {
+            throw new BusinessValidationException('documents', 'Unggah SK Panitia yang sudah ditandatangani sebelum kegiatan disubmit.');
         }
 
         return DB::transaction(function () use ($activity) {
@@ -235,7 +240,10 @@ class ApprovalService
         $year = now()->year;
         $sequence = Activity::whereYear('approved_at', $year)->whereNotNull('approval_document_number')->count() + 1;
 
-        return sprintf('SK-%d-%04d', $year, $sequence);
+        // "APV", not "SK": this is VAKASI's approval reference, not a Surat
+        // Keputusan. The real SK Panitia is a signed document uploaded to
+        // the activity, and the two must not be mistaken for each other.
+        return sprintf('APV-%d-%04d', $year, $sequence);
     }
 
     private function pendingApproval(Activity $activity): Approval

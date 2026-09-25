@@ -30,12 +30,12 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const WORKFLOW_STEPS = [
   { icon: "event_available", label: "Kegiatan", desc: "TU mengajukan kegiatan dan pesertanya" },
   { icon: "calculate", label: "Honor", desc: "Nominal dihitung otomatis dari master tarif" },
-  { icon: "verified", label: "Approval", desc: "Kepala Sekolah menyetujui dan menerbitkan SK" },
+  { icon: "verified", label: "Approval", desc: "Kepala Sekolah menyetujui dan menerbitkan bukti persetujuan" },
   { icon: "cloud_upload", label: "Pencairan", desc: "Diteruskan ke Sianggar untuk dibayarkan" },
 ];
 
 const TRUST_POINTS = [
-  { icon: "qr_code", label: "QR verifikasi publik di tiap SK" },
+  { icon: "qr_code", label: "QR verifikasi publik di tiap persetujuan" },
   { icon: "shield_check", label: "Jejak audit untuk setiap perubahan" },
 ];
 

@@ -23,7 +23,7 @@ class HonorCalculationService
     public function __construct(private readonly BudgetService $budgetService) {}
 
     /**
-     * @param  array<int, array{employee_id: int, honor_type_id: int, volume: int, tax_amount?: int, deduction_amount?: int, notes?: string|null}>  $items
+     * @param  array<int, array{activity_member_id?: int|null, employee_id?: int|null, honor_type_id: int, volume: int, tax_amount?: int, deduction_amount?: int, notes?: string|null}>  $items
      * @return array{items: Collection<int, HonorDetail>, gross_amount: int, tax_amount: int, deduction_amount: int, net_amount: int}
      */
     public function generateForActivity(Activity $activity, array $items): array
@@ -35,12 +35,13 @@ class HonorCalculationService
             );
         }
 
+        $items = $this->resolveMembers($activity, $items);
         $this->assertNoDuplicateLines($items);
 
         return DB::transaction(function () use ($activity, $items) {
             $details = collect($items)
                 ->map(fn (array $item) => $this->upsertLine($activity, $item))
-                ->each->load(['employee', 'honorType']);
+                ->each->load(['employee', 'honorType', 'activityMember']);
 
             // A recalculation replaces the activity's honor set, it does
             // not merge into it. Without this, a line dropped from the
@@ -66,38 +67,75 @@ class HonorCalculationService
     }
 
     /**
-     * Two lines keyed on the same (employee, honor type) pair would make
+     * Two lines keyed on the same (member, honor type) pair would make
      * the second silently overwrite the first via updateOrCreate, and the
      * returned total would then double-count a line that exists only
      * once in the table.
      *
-     * @param  array<int, array{employee_id: int, honor_type_id: int}>  $items
+     * @param  array<int, array{activity_member_id: int, honor_type_id: int}>  $items
      */
     private function assertNoDuplicateLines(array $items): void
     {
-        $keys = collect($items)->map(fn (array $item) => $item['employee_id'].':'.$item['honor_type_id']);
+        $keys = collect($items)->map(fn (array $item) => $item['activity_member_id'].':'.$item['honor_type_id']);
 
         if ($keys->count() !== $keys->unique()->count()) {
             throw new BusinessValidationException(
                 'items',
-                'Terdapat baris honor ganda untuk kombinasi pegawai dan jenis honor yang sama.',
+                'Terdapat baris honor ganda untuk kombinasi peserta dan jenis honor yang sama.',
             );
         }
     }
 
     /**
-     * @param  array{employee_id: int, honor_type_id: int, volume: int, tax_amount?: int, deduction_amount?: int, notes?: string|null}  $item
+     * Resolves every line to the activity_members row it pays. A line
+     * given only an employee_id is accepted when that employee holds a
+     * single role here; with several roles the caller must say which,
+     * otherwise the honor would be booked against an arbitrary role.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveMembers(Activity $activity, array $items): array
+    {
+        $members = $activity->members()->get();
+
+        return array_map(function (array $item) use ($members) {
+            if (! empty($item['activity_member_id'])) {
+                $member = $members->firstWhere('id', (int) $item['activity_member_id']);
+
+                if (! $member) {
+                    throw new BusinessValidationException('activity_member_id', 'Peserta tidak terdaftar pada kegiatan ini.');
+                }
+
+                return ['activity_member_id' => $member->id] + $item;
+            }
+
+            $candidates = $members->where('employee_id', (int) $item['employee_id']);
+
+            if ($candidates->isEmpty()) {
+                throw new BusinessValidationException(
+                    'employee_id',
+                    'Pegawai belum ditambahkan sebagai peserta kegiatan ini.',
+                );
+            }
+
+            if ($candidates->count() > 1) {
+                throw new BusinessValidationException(
+                    'activity_member_id',
+                    'Pegawai memiliki lebih dari satu peran pada kegiatan ini; tentukan peran (activity_member_id) untuk setiap baris honor.',
+                );
+            }
+
+            return ['activity_member_id' => $candidates->first()->id] + $item;
+        }, $items);
+    }
+
+    /**
+     * @param  array{activity_member_id: int, honor_type_id: int, volume: int, tax_amount?: int, deduction_amount?: int, notes?: string|null}  $item
      */
     private function upsertLine(Activity $activity, array $item): HonorDetail
     {
-        $member = $activity->members()->with('employee')->where('employee_id', $item['employee_id'])->first();
-
-        if (! $member) {
-            throw new BusinessValidationException(
-                'employee_id',
-                'Pegawai belum ditambahkan sebagai peserta kegiatan ini.',
-            );
-        }
+        $member = $activity->members()->with('employee')->findOrFail($item['activity_member_id']);
 
         if (! $member->employee->isActive()) {
             throw new BusinessValidationException('employee_id', 'Pegawai tidak aktif.');
@@ -142,6 +180,7 @@ class HonorCalculationService
                 'activity_id' => $activity->id,
                 'employee_id' => $member->employee_id,
                 'rate_snapshot' => $rate->rate,
+                'rate_decree_number_snapshot' => $rate->decree_number,
                 'volume' => $volume,
                 'unit_snapshot' => $honorType->unit,
                 'gross_amount' => $gross,

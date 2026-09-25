@@ -60,6 +60,26 @@ class ActivityService
     }
 
     /**
+     * Adds several employees under one role in a single transaction: if
+     * any of them is inactive or already holds that role, nothing is
+     * added, so a partial committee is never left behind.
+     *
+     * @param  array{employee_ids: array<int, int>, role_name: string, notes?: string|null}  $data
+     * @return array<int, ActivityMember>
+     */
+    public function addMembers(Activity $activity, array $data): array
+    {
+        return DB::transaction(fn () => array_map(
+            fn (int $employeeId) => $this->addMember($activity, [
+                'employee_id' => $employeeId,
+                'role_name' => $data['role_name'],
+                'notes' => $data['notes'] ?? null,
+            ]),
+            array_values(array_unique(array_map('intval', $data['employee_ids']))),
+        ));
+    }
+
+    /**
      * @param  array{employee_id: int, role_name: string, notes?: string|null}  $data
      */
     public function addMember(Activity $activity, array $data): ActivityMember

@@ -22,9 +22,13 @@ export type ActivityMember = {
 
 export type HonorDetail = {
   id: number;
+  activity_member_id: number;
+  role_name?: string | null;
   employee: Employee;
   honor_type: HonorType;
   rate_snapshot: number;
+  /** SK Yayasan tarif yang dipakai saat honor dihitung (snapshot). */
+  rate_decree_number: string | null;
   volume: number;
   unit_snapshot: string;
   gross_amount: number;
@@ -53,6 +57,9 @@ export type Approval = {
   notes: string | null;
   logs?: ApprovalLog[];
 };
+
+/** Wajib ada sebelum kegiatan disubmit (ApprovalService::submit). */
+export const SK_PANITIA = 'sk_panitia';
 
 export type ActivityDocument = {
   id: number;
@@ -172,8 +179,22 @@ export function addActivityMember(
   });
 }
 
+export function addActivityMembers(
+  activityId: number,
+  input: { employee_ids: number[]; role_name: string; notes?: string }
+): Promise<ActivityMember[]> {
+  return apiFetch<ActivityMember[]>(`/api/v1/activities/${activityId}/members/bulk`, {
+    method: 'POST',
+    body: input,
+  });
+}
+
+/**
+ * activity_member_id, not employee_id: the same employee can sit on the
+ * committee in two roles, and each role gets its own honor line.
+ */
 export type CalculateHonorItem = {
-  employee_id: number;
+  activity_member_id: number;
   honor_type_id: number;
   volume: number;
   tax_amount?: number;

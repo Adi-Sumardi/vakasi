@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ActivityMember\StoreActivityMemberRequest;
+use App\Http\Requests\ActivityMember\StoreManyActivityMembersRequest;
 use App\Http\Requests\ActivityMember\UpdateActivityMemberRequest;
 use App\Http\Resources\ActivityMemberResource;
 use App\Models\Activity;
@@ -32,6 +33,19 @@ class ActivityMemberController extends Controller
         $member = $this->activityService->addMember($activity, $request->validated());
 
         return $this->success(new ActivityMemberResource($member->load('employee')), 'Peserta berhasil ditambahkan.', 201);
+    }
+
+    public function storeMany(StoreManyActivityMembersRequest $request, Activity $activity): JsonResponse
+    {
+        $this->authorize('update', $activity);
+
+        $members = $this->activityService->addMembers($activity, $request->validated());
+
+        return $this->success(
+            ActivityMemberResource::collection(collect($members)->each->load('employee')),
+            count($members).' peserta berhasil ditambahkan.',
+            201,
+        );
     }
 
     public function update(UpdateActivityMemberRequest $request, Activity $activity, ActivityMember $member): JsonResponse

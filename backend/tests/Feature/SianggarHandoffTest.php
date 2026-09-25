@@ -98,6 +98,7 @@ class SianggarHandoffTest extends TestCase
         $this->as($tu)->postJson("/api/v1/activities/{$activity->id}/calculate-honor", [
             'items' => [['employee_id' => $employee->id, 'honor_type_id' => $honorType->id, 'volume' => 8]],
         ])->assertOk();
+        $this->attachSkPanitia($activity->id, $tu);
         $this->as($tu)->postJson("/api/v1/activities/{$activity->id}/submit")->assertOk();
 
         $this->as($kepsek)->postJson("/api/v1/activities/{$activity->id}/approve")

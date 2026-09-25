@@ -18,7 +18,12 @@ class CalculateHonorRequest extends FormRequest
     {
         return [
             'items' => ['required', 'array', 'min:1'],
-            'items.*.employee_id' => ['required', 'exists:employees,id'],
+            // activity_member_id pins the line to one role when the same
+            // employee holds several on this activity (e.g. Pengawas and
+            // Korektor). employee_id alone is still accepted for the
+            // common one-role case.
+            'items.*.activity_member_id' => ['nullable', 'integer', 'required_without:items.*.employee_id'],
+            'items.*.employee_id' => ['nullable', 'exists:employees,id', 'required_without:items.*.activity_member_id'],
             'items.*.honor_type_id' => ['required', 'exists:honor_types,id'],
             'items.*.volume' => ['required', 'integer', 'min:1'],
             'items.*.tax_amount' => ['sometimes', 'integer', 'min:0'],

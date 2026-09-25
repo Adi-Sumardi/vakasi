@@ -57,7 +57,7 @@ export function HeaderSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setOpen(true)}
-        placeholder="Cari kegiatan, penerima, SK, SPD..."
+        placeholder="Cari kegiatan, penerima, no. persetujuan..."
         className="w-72 lg:w-80 h-9 pl-9 pr-14 py-space-xs bg-surface-container-low/60 border border-outline-variant/50 rounded-lg text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:border-primary focus:outline-none transition-all"
       />
       {!query && (

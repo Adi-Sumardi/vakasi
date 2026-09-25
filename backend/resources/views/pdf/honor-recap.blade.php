@@ -87,7 +87,12 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ $line['employee_name'] }}</td>
                     <td>{{ $line['role_name'] ?? '-' }}</td>
-                    <td>{{ $line['honor_type'] ?? '-' }}</td>
+                    <td>
+                        {{ $line['honor_type'] ?? '-' }}
+                        @if ($line['rate_decree_number'])
+                            <br><span style="font-size: 9px; color: #555;">SK Tarif: {{ $line['rate_decree_number'] }}</span>
+                        @endif
+                    </td>
                     <td class="text-right">{{ number_format($line['rate'], 0, ',', '.') }}</td>
                     <td class="text-center">{{ $line['volume'] }} {{ $line['unit'] }}</td>
                     <td class="text-right">{{ number_format($line['amount'], 0, ',', '.') }}</td>
@@ -111,6 +116,17 @@
     <p style="font-size: 11px;">
         Terbilang: <em>{{ $terbilang }} rupiah</em>
     </p>
+
+    <table class="info" style="margin-top: 6px;">
+        <tr>
+            <td class="label">Dasar Kepanitiaan</td>
+            <td>: {{ $skPanitia->isNotEmpty() ? 'SK Panitia terlampir ('.$skPanitia->implode(', ').')' : 'SK Panitia belum dilampirkan' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Dasar Tarif</td>
+            <td>: {{ $rateDecrees->isNotEmpty() ? $rateDecrees->implode(', ') : '-' }}</td>
+        </tr>
+    </table>
 
     <table class="signature">
         <tr>
