@@ -27,7 +27,7 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="hero-surface rounded-2xl px-space-lg py-space-lg sm:px-space-xl sm:py-space-xl shadow-[0_12px_32px_-18px_rgb(10_31_82_/_0.6)] flex flex-col gap-space-lg">
+    <section className="hero-surface rounded-2xl px-space-lg py-space-lg sm:px-space-xl sm:py-space-xl shadow-sm flex flex-col gap-space-lg">
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-space-md">
         <div className="flex flex-col gap-space-2xs min-w-0">
           {breadcrumb.length > 0 && (
@@ -105,7 +105,7 @@ export function HeroButton({
 /** A figure shown inside the hero (e.g. "Total honor"). */
 export function HeroStat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5 px-space-md py-space-sm rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm min-w-0">
+    <div className="flex flex-col gap-0.5 px-space-md py-space-sm rounded-xl bg-white/10 border border-white/15 min-w-0">
       <span className="font-label-sm text-label-sm uppercase tracking-wider text-white/70">{label}</span>
       <span className="font-headline-sm text-headline-sm font-bold text-white tabular-nums truncate">{value}</span>
       {hint && <span className="font-body-sm text-body-sm text-white/70">{hint}</span>}
