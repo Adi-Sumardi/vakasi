@@ -23,6 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // Di shared hosting, request API datang lewat Next.js di server yang
+        // sama. Daftarkan IP server di TRUSTED_PROXIES (pisah koma) supaya IP
+        // klien asli dipakai untuk rate limit & log. Kosong = tidak ada.
+        if ($trusted = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: array_map('trim', explode(',', $trusted)));
+        }
+
         // Aplikasi ini API-only dan tidak punya route bernama "login".
         // Tanpa ini, permintaan tak terautentikasi yang tidak meminta JSON
         // (mis. dibuka langsung di browser) membuat Authenticate mencoba

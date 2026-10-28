@@ -32,7 +32,9 @@ export const config = {
   // /verify is the public QR-approval verification page (FLOW.md
   // section 8) — deliberately reachable without a session, same as
   // its backend counterpart (/api/v1/public/verify/{code}).
+  // /api & /sanctum diteruskan ke Laravel (lihat next.config.ts) dan
+  // punya autentikasi sendiri - termasuk login & webhook Sianggar.
   matcher: [
-    '/((?!login|verify|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|avif)$).*)',
+    '/((?!api|sanctum|login|verify|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|avif)$).*)',
   ],
 };
