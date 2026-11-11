@@ -211,6 +211,26 @@ class Activity extends Model
         return $query;
     }
 
+    /**
+     * Free-text search used by every list that shows activities: name or
+     * activity code. An empty term leaves the query untouched.
+     *
+     * @param  Builder<Activity>  $query
+     * @return Builder<Activity>
+     */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('name', 'like', "%{$term}%")
+            ->orWhere('activity_code', 'like', "%{$term}%"));
+    }
+
     /** @return HasMany<Document, $this> */
     public function documents(): HasMany
     {

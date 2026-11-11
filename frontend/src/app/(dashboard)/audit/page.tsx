@@ -1,5 +1,6 @@
-import Link from 'next/link';
+import { LiveSearch } from '@/components/common/live-search';
 import { PageHeader } from '@/components/common/page-header';
+import { PaginationBar } from '@/components/common/pagination-bar';
 
 import { Unauthorized } from '@/components/layout/unauthorized';
 import { listAuditLogsServer } from '@/lib/api/audit.server';
@@ -27,7 +28,7 @@ const ACTION_LABEL: Record<string, string> = {
 export default async function AuditTrailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ search?: string; page?: string }>;
 }) {
   const me = await meServer();
 
@@ -35,9 +36,9 @@ export default async function AuditTrailPage({
     return <Unauthorized />;
   }
 
-  const { page } = await searchParams;
+  const { search = '', page } = await searchParams;
   const currentPage = Number(page) || 1;
-  const { items: logs, meta } = await listAuditLogsServer(currentPage);
+  const { items: logs, meta } = await listAuditLogsServer(currentPage, search);
 
   return (
     <div className="p-space-base sm:p-space-xl pb-space-3xl flex flex-col w-full min-h-screen gap-space-lg">
@@ -47,9 +48,13 @@ export default async function AuditTrailPage({
         description={<>Riwayat seluruh perubahan penting: siapa, kapan, dan aksi apa yang dilakukan.</>}
       />
 
+      <LiveSearch placeholder="Cari aksi, pengguna, atau jenis data..." className="sm:w-80" />
+
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {logs.length === 0 ? (
-          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">Belum ada aktivitas tercatat.</div>
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
+            {search ? <>Tidak ada log yang cocok dengan &ldquo;{search}&rdquo;.</> : 'Belum ada aktivitas tercatat.'}
+          </div>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -80,39 +85,9 @@ export default async function AuditTrailPage({
             </table>
           </div>
         )}
+        <PaginationBar meta={meta} basePath="/audit" params={{ search: search || undefined }} />
       </div>
 
-      {meta.total > 0 && (
-        <div className="flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
-          <span>
-            Menampilkan halaman {meta.current_page} dari {meta.last_page} ({meta.total} log total)
-          </span>
-          <div className="flex gap-space-xs">
-            <Link
-              href={`/audit?page=${Math.max(1, meta.current_page - 1)}`}
-              aria-disabled={meta.current_page <= 1}
-              className={`px-3 py-1.5 rounded border border-outline-variant/40 font-label-sm text-label-sm font-semibold ${
-                meta.current_page <= 1
-                  ? 'pointer-events-none opacity-40'
-                  : 'hover:bg-surface-container text-on-surface'
-              }`}
-            >
-              Sebelumnya
-            </Link>
-            <Link
-              href={`/audit?page=${Math.min(meta.last_page, meta.current_page + 1)}`}
-              aria-disabled={meta.current_page >= meta.last_page}
-              className={`px-3 py-1.5 rounded border border-outline-variant/40 font-label-sm text-label-sm font-semibold ${
-                meta.current_page >= meta.last_page
-                  ? 'pointer-events-none opacity-40'
-                  : 'hover:bg-surface-container text-on-surface'
-              }`}
-            >
-              Berikutnya
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

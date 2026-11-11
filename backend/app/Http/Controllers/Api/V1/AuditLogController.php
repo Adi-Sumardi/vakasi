@@ -19,6 +19,11 @@ class AuditLogController extends Controller
             ->with('user')
             ->when($request->string('entity_type')->toString(), fn ($q, $type) => $q->where('entity_type', 'like', "%{$type}%"))
             ->when($request->integer('entity_id'), fn ($q, $id) => $q->where('entity_id', $id))
+            // Action, the person who did it, or the record type.
+            ->when(trim($request->string('search')->toString()), fn ($q, string $s) => $q->where(fn ($w) => $w
+                ->where('action', 'like', "%{$s}%")
+                ->orWhere('entity_type', 'like', "%{$s}%")
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%"))))
             ->latest('created_at')
             ->paginate(30, page: $request->integer('page') ?: 1);
 

@@ -36,6 +36,7 @@ class DisbursementController extends Controller
             ->visibleTo($request->user())
             ->where('status', Activity::APPROVED)
             ->when($request->integer('unit_id'), fn ($q, $unitId) => $q->where('unit_id', $unitId))
+            ->search($request->string('search')->toString())
             ->with(['unit', 'fundSource', 'creator', 'budget', 'disbursement.latestEvent'])
             ->latest('approved_at')
             ->get();

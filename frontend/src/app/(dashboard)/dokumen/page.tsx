@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/common/page-header';
 
 import { Icon } from '@/components/ui/icon';
 import { Hint } from '@/components/common/hint';
+import { LiveSearch } from '@/components/common/live-search';
 import { PageTabs } from '@/components/common/page-tabs';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import type { DocumentRow } from '@/lib/api/documents.server';
@@ -25,9 +26,9 @@ function formatSize(bytes: number): string {
 
 const TYPE_TABS = ['', 'sk_panitia', 'surat_tugas', 'daftar_hadir', 'rincian_anggaran', 'lainnya'];
 
-export default async function DokumenPage({ searchParams }: { searchParams: Promise<{ type?: string; page?: string }> }) {
-  const { type = '', page } = await searchParams;
-  const list = await serverApiFetchPage<DocumentRow>(`/api/v1/documents${toQuery({ document_type: type, page })}`);
+export default async function DokumenPage({ searchParams }: { searchParams: Promise<{ type?: string; search?: string; page?: string }> }) {
+  const { type = '', search = '', page } = await searchParams;
+  const list = await serverApiFetchPage<DocumentRow>(`/api/v1/documents${toQuery({ document_type: type, search, page })}`);
   const documents = list.data;
 
   return (
@@ -38,19 +39,22 @@ export default async function DokumenPage({ searchParams }: { searchParams: Prom
         description={<>SK Panitia, surat tugas, daftar hadir, dan dokumen lain dari semua kegiatan. Dokumen diunggah dari halaman detail kegiatan.</>}
       />
 
-      <PageTabs
-        active={type}
-        tabs={TYPE_TABS.map((key) => ({
-          key,
-          label: key ? (DOCUMENT_TYPE_LABEL[key] ?? key) : 'Semua',
-          href: `/dokumen${toQuery({ type: key })}`,
-        }))}
-      />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+        <PageTabs
+          active={type}
+          tabs={TYPE_TABS.map((key) => ({
+            key,
+            label: key ? (DOCUMENT_TYPE_LABEL[key] ?? key) : 'Semua',
+            href: `/dokumen${toQuery({ type: key, search })}`,
+          }))}
+        />
+        <LiveSearch placeholder="Cari nama berkas atau kegiatan..." />
+      </div>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {documents.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
-            {type ? 'Belum ada dokumen jenis ini.' : 'Belum ada dokumen diunggah.'}
+            {search ? <>Tidak ada dokumen yang cocok dengan &ldquo;{search}&rdquo;.</> : type ? 'Belum ada dokumen jenis ini.' : 'Belum ada dokumen diunggah.'}
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
@@ -103,7 +107,7 @@ export default async function DokumenPage({ searchParams }: { searchParams: Prom
             </table>
           </div>
         )}
-        <PaginationBar meta={list.meta} basePath="/dokumen" params={{ type: type || undefined }} />
+        <PaginationBar meta={list.meta} basePath="/dokumen" params={{ type: type || undefined, search: search || undefined }} />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { HeroButton, PageHeader } from '@/components/common/page-header';
 
 import { PageTabs } from '@/components/common/page-tabs';
+import { LiveSearch } from '@/components/common/live-search';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
 import type { Activity } from '@/lib/api/activities';
@@ -65,34 +66,31 @@ export default async function KegiatanPage({ searchParams }: { searchParams: Pro
           active={status}
           tabs={STATUS_TABS.map((t) => ({ key: t.key, label: t.label, href: tabHref(t.key), count: counts[t.key] }))}
         />
-        <form className="flex flex-wrap items-center gap-space-xs" action="/kegiatan">
-          {status && <input type="hidden" name="status" value={status} />}
+        <div className="flex flex-wrap items-center gap-space-xs">
           {!scoped && (
-            <select
-              name="unit_id"
-              defaultValue={unit_id}
-              aria-label="Filter unit"
-              className="h-9 px-2 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm"
-            >
-              <option value="">Semua unit</option>
-              {units.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+            <form className="flex flex-wrap items-center gap-space-xs" action="/kegiatan">
+              {status && <input type="hidden" name="status" value={status} />}
+              <select
+                name="unit_id"
+                defaultValue={unit_id}
+                aria-label="Filter unit"
+                className="h-9 px-2 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm"
+              >
+                <option value="">Semua unit</option>
+                {units.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+              {search && <input type="hidden" name="search" value={search} />}
+              <button type="submit" className="h-9 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 font-label-md text-label-md font-semibold">
+                Terapkan
+              </button>
+            </form>
           )}
-          <input
-            name="search"
-            defaultValue={search}
-            placeholder="Cari nama atau kode..."
-            aria-label="Cari kegiatan"
-            className="h-9 w-56 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm"
-          />
-          <button type="submit" className="h-9 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 font-label-md text-label-md font-semibold">
-            Terapkan
-          </button>
-        </form>
+          <LiveSearch placeholder="Cari nama atau kode..." label="Cari kegiatan" />
+        </div>
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden flex flex-col">

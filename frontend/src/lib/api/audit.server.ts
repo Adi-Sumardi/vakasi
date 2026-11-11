@@ -21,5 +21,7 @@ export type AuditLogMeta = {
   per_page: number;
 };
 
-export const listAuditLogsServer = (page = 1) =>
-  serverApiFetch<{ items: AuditLog[]; meta: AuditLogMeta }>(`/api/v1/audit-logs?page=${page}`);
+export const listAuditLogsServer = (page = 1, search = '') =>
+  serverApiFetch<{ items: AuditLog[]; meta: AuditLogMeta }>(
+    `/api/v1/audit-logs?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+  );

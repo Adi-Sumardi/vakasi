@@ -33,6 +33,10 @@ class DocumentController extends Controller
                     ->orWhereHas('payment.activity', fn (Builder $a) => $a->visibleTo($user));
             })
             ->when($request->string('document_type')->toString(), fn (Builder $q, $type) => $q->where('document_type', $type))
+            ->when(trim($request->string('search')->toString()), fn (Builder $q, string $s) => $q->where(fn (Builder $w) => $w
+                ->where('file_name', 'like', "%{$s}%")
+                ->orWhereHas('activity', fn (Builder $a) => $a->search($s))
+                ->orWhereHas('payment.activity', fn (Builder $a) => $a->search($s))))
             ->latest('created_at')
             ->paginate($this->perPage($request));
 

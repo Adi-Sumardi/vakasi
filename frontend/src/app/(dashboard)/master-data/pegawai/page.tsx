@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { LiveSearch } from '@/components/common/live-search';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import { EmployeeImportDialog } from '@/components/master-data/employee-import-dialog';
 import { EmployeeManager } from '@/components/master-data/employee-manager';
@@ -48,13 +49,7 @@ export default async function PegawaiPage({ searchParams }: { searchParams: Prom
             </option>
           ))}
         </select>
-        <input
-          name="search"
-          defaultValue={search}
-          placeholder="Cari nama atau kode..."
-          aria-label="Cari pegawai"
-          className="h-9 w-56 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-body-sm text-body-sm"
-        />
+        {search && <input type="hidden" name="search" value={search} />}
         <button type="submit" className="h-9 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 font-label-md text-label-md font-semibold">
           Terapkan
         </button>
@@ -64,6 +59,7 @@ export default async function PegawaiPage({ searchParams }: { searchParams: Prom
           </Link>
         )}
       </form>
+      <LiveSearch placeholder="Cari nama atau kode..." label="Cari pegawai" />
       {canManage && <EmployeeImportDialog />}
     </div>
   );

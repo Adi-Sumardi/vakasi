@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/icon';
+import { LiveSearch } from '@/components/common/live-search';
 import { PageHeader } from '@/components/common/page-header';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
@@ -29,10 +30,10 @@ type MyHonor = {
 };
 
 /** "Honor Saya": the signed-in employee's own honor lines and slips. */
-export default async function HonorSayaPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const { page } = await searchParams;
+export default async function HonorSayaPage({ searchParams }: { searchParams: Promise<{ search?: string; page?: string }> }) {
+  const { search = '', page } = await searchParams;
   const me = await meServer();
-  const list = await serverApiFetchPage<MyHonor>(`/api/v1/my-honors${toQuery({ page })}`);
+  const list = await serverApiFetchPage<MyHonor>(`/api/v1/my-honors${toQuery({ search, page })}`);
   const paid = list.data.filter((h) => h.activity.disbursement_state === 'dibayar').reduce((s, h) => s + h.amount, 0);
 
   return (
@@ -49,14 +50,17 @@ export default async function HonorSayaPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30 w-fit">
-        <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Sudah dibayar (halaman ini)</span>
-        <div className="font-currency-display text-headline-sm text-tertiary font-bold mt-space-2xs tabular-nums">{formatRupiah(paid)}</div>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md">
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30 w-fit">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Sudah dibayar (halaman ini)</span>
+          <div className="font-currency-display text-headline-sm text-tertiary font-bold mt-space-2xs tabular-nums">{formatRupiah(paid)}</div>
+        </div>
+        <LiveSearch placeholder="Cari nama atau kode kegiatan..." />
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {list.data.length === 0 ? (
-          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">Belum ada honor untuk Anda.</div>
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">{search ? <>Tidak ada honor yang cocok dengan &ldquo;{search}&rdquo;.</> : 'Belum ada honor untuk Anda.'}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -107,7 +111,7 @@ export default async function HonorSayaPage({ searchParams }: { searchParams: Pr
             </table>
           </div>
         )}
-        <PaginationBar meta={list.meta} basePath="/honor-saya" />
+        <PaginationBar meta={list.meta} basePath="/honor-saya" params={{ search: search || undefined }} />
       </div>
     </div>
   );

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common/page-header';
+import { ClientPagination } from '@/components/common/client-pagination';
+import { SearchInput } from '@/components/common/search-input';
+import { useClientList } from '@/lib/use-client-list';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import { ROLE_LABEL } from '@/lib/api/auth';
@@ -37,6 +40,7 @@ export function UserManager({
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm(roles));
+  const list = useClientList(users, (u) => [u.name, u.email, u.role ? (ROLE_LABEL[u.role.name] ?? u.role.name) : '', u.unit?.name ?? 'Semua unit'].join(' '));
 
   function openCreate() {
     setEditingId(null);
@@ -123,8 +127,17 @@ export function UserManager({
       />
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
+        {users.length > 0 && (
+          <div className="p-space-sm border-b border-outline-variant/30">
+            <SearchInput value={list.query} onChange={list.setQuery} placeholder="Cari nama, email, peran, atau unit..." />
+          </div>
+        )}
         {users.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">Belum ada pengguna.</div>
+        ) : list.matched === 0 ? (
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
+            Tidak ada pengguna yang cocok dengan &ldquo;{list.query.trim()}&rdquo;.
+          </div>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -140,7 +153,7 @@ export function UserManager({
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-low">
-                {users.map((u) => (
+                {list.pageItems.map((u) => (
                   <tr key={u.id} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="px-space-base py-space-sm font-label-md text-label-md font-semibold text-on-surface">
                       {u.name}
@@ -190,6 +203,7 @@ export function UserManager({
             </table>
           </div>
         )}
+        <ClientPagination page={list.page} lastPage={list.lastPage} pageSize={list.pageSize} matched={list.matched} total={list.total} onPage={list.setPage} />
       </div>
 
       {open && (

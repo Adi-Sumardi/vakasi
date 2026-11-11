@@ -65,6 +65,10 @@ class ReportService
             ->whereHas('activity', fn (Builder $a) => $this->scopeActivitiesToUser($a, $user))
             ->with(['activity', 'employee', 'honorType', 'activityMember'])
             ->when($filters['unit_id'] ?? null, fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->where('unit_id', $v)))
+            // Employee name/code, or the activity it was paid for.
+            ->when(trim((string) ($filters['search'] ?? '')), fn (Builder $q, string $s) => $q->where(fn (Builder $w) => $w
+                ->whereHas('employee', fn (Builder $e) => $e->where('name', 'like', "%{$s}%")->orWhere('employee_code', 'like', "%{$s}%"))
+                ->orWhereHas('activity', fn (Builder $a) => $a->search($s))))
             // By the activity's date, like the Excel export, so the screen
             // and the file agree on what "September" means.
             ->when($filters['start_date'] ?? null, fn (Builder $q, $v) => $q->whereHas('activity', fn (Builder $a) => $a->whereDate('start_date', '>=', $v)))

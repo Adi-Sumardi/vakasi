@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { LiveSearch } from '@/components/common/live-search';
 import { HeroStat, PageHeader } from '@/components/common/page-header';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import { Icon } from '@/components/ui/icon';
@@ -21,10 +22,10 @@ function daysWaiting(submittedAt: string | null): number {
  * whether it can be approved quickly (SK Panitia, honor vs anggaran,
  * size of the committee) so the approver opens the right one first.
  */
-export default async function ApprovalKegiatanPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const { page } = await searchParams;
+export default async function ApprovalKegiatanPage({ searchParams }: { searchParams: Promise<{ search?: string; page?: string }> }) {
+  const { search = '', page } = await searchParams;
   const me = await meServer();
-  const list = await serverApiFetchPage<QueueItem>(`/api/v1/approvals${toQuery({ page })}`);
+  const list = await serverApiFetchPage<QueueItem>(`/api/v1/approvals${toQuery({ search, page })}`);
   const activities = list.data;
   const pageHonor = activities.reduce((sum, a) => sum + (a.honor_total ?? 0), 0);
   const oldest = activities.reduce((max, a) => Math.max(max, daysWaiting(a.submitted_at)), 0);
@@ -44,7 +45,13 @@ export default async function ApprovalKegiatanPage({ searchParams }: { searchPar
         </div>
       </PageHeader>
 
-      {activities.length === 0 ? (
+      <LiveSearch placeholder="Cari nama atau kode kegiatan..." className="sm:w-80" />
+
+      {activities.length === 0 && search ? (
+        <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-space-2xl text-center font-body-md text-body-md text-on-surface-variant">
+          Tidak ada pengajuan yang cocok dengan &ldquo;{search}&rdquo;.
+        </div>
+      ) : activities.length === 0 ? (
         <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-space-2xl flex flex-col items-center gap-space-sm text-center">
           <span className="w-14 h-14 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center">
             <Icon name="task_alt" className="text-2xl" />
@@ -107,7 +114,7 @@ export default async function ApprovalKegiatanPage({ searchParams }: { searchPar
 
       {list.meta.last_page > 1 && (
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden">
-          <PaginationBar meta={list.meta} basePath="/kegiatan/approval" />
+          <PaginationBar meta={list.meta} basePath="/kegiatan/approval" params={{ search: search || undefined }} />
         </div>
       )}
     </div>

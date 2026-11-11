@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LiveSearch } from '@/components/common/live-search';
 import { HeroButton, PageHeader } from '@/components/common/page-header';
 
 import { Icon } from '@/components/ui/icon';
@@ -10,7 +11,7 @@ import { serverApiFetch, serverApiFetchPage, toQuery } from '@/lib/api/server';
 import { formatRupiah } from '@/lib/format';
 import { Hint } from '@/components/common/hint';
 
-type Search = { unit_id?: string; start_date?: string; end_date?: string; page?: string };
+type Search = { unit_id?: string; start_date?: string; end_date?: string; search?: string; page?: string };
 
 /**
  * Every calculated honor line, filterable by unit and period, with the
@@ -18,13 +19,13 @@ type Search = { unit_id?: string; start_date?: string; end_date?: string; page?:
  * panitia has no tax or deduction in this flow.
  */
 export default async function RekapHonorPage({ searchParams }: { searchParams: Promise<Search> }) {
-  const { unit_id = '', start_date = '', end_date = '', page } = await searchParams;
+  const { unit_id = '', start_date = '', end_date = '', search = '', page } = await searchParams;
   const user = await meServer();
   const scoped = !!user?.scoped_unit_id;
   const filters = { unit_id, start_date, end_date };
 
   const [list, units] = await Promise.all([
-    serverApiFetchPage<HonorReportRow>(`/api/v1/reports/honors${toQuery({ ...filters, page })}`),
+    serverApiFetchPage<HonorReportRow>(`/api/v1/reports/honors${toQuery({ ...filters, search, page })}`),
     scoped ? Promise.resolve([] as Unit[]) : serverApiFetch<Unit[]>('/api/v1/units?per_page=1000'),
   ]);
 
@@ -44,6 +45,7 @@ export default async function RekapHonorPage({ searchParams }: { searchParams: P
       />
 
       <form action="/honor" className="flex flex-wrap items-end gap-space-sm bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30">
+        {search && <input type="hidden" name="search" value={search} />}
         {!scoped && (
           <label className="flex flex-col gap-1 font-label-sm text-label-sm text-on-surface-variant">
             Unit
@@ -68,16 +70,17 @@ export default async function RekapHonorPage({ searchParams }: { searchParams: P
         <button type="submit" className="h-9 px-4 rounded-lg bg-primary hover:bg-primary-container text-white font-label-md text-label-md font-semibold">
           Terapkan
         </button>
-        {(unit_id || start_date || end_date) && (
+        {(unit_id || start_date || end_date || search) && (
           <Link href="/honor" className="h-9 px-3 inline-flex items-center rounded-lg text-on-surface-variant hover:bg-surface-container font-label-md text-label-md">
             Reset
           </Link>
         )}
+        <LiveSearch placeholder="Cari pegawai atau kegiatan..." className="sm:ml-auto" />
       </form>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {list.data.length === 0 ? (
-          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">Belum ada honor pada filter ini.</div>
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">{search ? <>Tidak ada honor yang cocok dengan &ldquo;{search}&rdquo;.</> : 'Belum ada honor pada filter ini.'}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -132,7 +135,7 @@ export default async function RekapHonorPage({ searchParams }: { searchParams: P
             </table>
           </div>
         )}
-        <PaginationBar meta={list.meta} basePath="/honor" params={{ unit_id: unit_id || undefined, start_date: start_date || undefined, end_date: end_date || undefined }} />
+        <PaginationBar meta={list.meta} basePath="/honor" params={{ unit_id: unit_id || undefined, start_date: start_date || undefined, end_date: end_date || undefined, search: search || undefined }} />
       </div>
     </div>
   );

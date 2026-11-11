@@ -25,6 +25,7 @@ class ApprovalController extends Controller
         $approvals = Activity::query()
             ->where('status', Activity::SUBMITTED)
             ->visibleTo($request->user())
+            ->search($request->string('search')->toString())
             ->with(['activityType', 'unit', 'fundSource', 'creator', 'approvals'])
             // What Kepala Sekolah needs to triage the queue without
             // opening each activity.

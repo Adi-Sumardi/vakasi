@@ -32,9 +32,7 @@ class ActivityController extends Controller
             ->visibleTo($user)
             ->when($request->string('status')->toString(), fn ($q, $status) => $q->where('status', $status))
             ->when($request->integer('unit_id'), fn ($q, $unitId) => $q->where('unit_id', $unitId))
-            ->when($request->string('search')->toString(), fn ($q, $s) => $q->where(function ($q2) use ($s) {
-                $q2->where('name', 'like', "%{$s}%")->orWhere('activity_code', 'like', "%{$s}%");
-            }))
+            ->search($request->string('search')->toString())
             ->latest()
             ->paginate($this->perPage($request));
 

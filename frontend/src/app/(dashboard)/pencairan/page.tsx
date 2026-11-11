@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageHeader } from '@/components/common/page-header';
 
+import { LiveSearch } from '@/components/common/live-search';
 import { PageTabs } from '@/components/common/page-tabs';
 import { PaginationBar } from '@/components/common/pagination-bar';
 import { StatusBadge } from '@/components/kegiatan/status-badge';
@@ -31,10 +32,10 @@ const STAGE_LABEL: Record<string, string> = {
  * callbacks Sianggar sends back. Answers the TU's usual question:
  * "sudah dibayar belum?"
  */
-export default async function PencairanPage({ searchParams }: { searchParams: Promise<{ state?: string; page?: string }> }) {
-  const { state = '', page } = await searchParams;
+export default async function PencairanPage({ searchParams }: { searchParams: Promise<{ state?: string; search?: string; page?: string }> }) {
+  const { state = '', search = '', page } = await searchParams;
   const user = await meServer();
-  const list = await serverApiFetchPage<Activity, Meta>(`/api/v1/disbursements${toQuery({ state, page })}`);
+  const list = await serverApiFetchPage<Activity, Meta>(`/api/v1/disbursements${toQuery({ state, search, page })}`);
   const total = Object.values(list.meta.counts ?? {}).reduce((a, b) => a + b, 0);
 
   return (
@@ -45,23 +46,26 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
         description={<>Kegiatan yang sudah disetujui{user?.scoped_unit_id ? ` di ${user.unit?.name ?? 'unit Anda'}` : ''} dan posisi pencairan honornya di Sianggar.</>}
       />
 
-      <PageTabs
-        active={state}
-        tabs={[
-          { key: '', label: 'Semua', href: '/pencairan', count: total },
-          ...DISBURSEMENT_STATES.map((s) => ({
-            key: s.key,
-            label: s.label,
-            href: `/pencairan?state=${s.key}`,
-            count: list.meta.counts?.[s.key] ?? 0,
-          })),
-        ]}
-      />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+        <PageTabs
+          active={state}
+          tabs={[
+            { key: '', label: 'Semua', href: `/pencairan${toQuery({ search })}`, count: total },
+            ...DISBURSEMENT_STATES.map((s) => ({
+              key: s.key,
+              label: s.label,
+              href: `/pencairan${toQuery({ state: s.key, search })}`,
+              count: list.meta.counts?.[s.key] ?? 0,
+            })),
+          ]}
+        />
+        <LiveSearch placeholder="Cari nama atau kode kegiatan..." />
+      </div>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
         {list.data.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
-            Belum ada kegiatan pada status ini.
+            {search ? <>Tidak ada kegiatan yang cocok dengan &ldquo;{search}&rdquo;.</> : 'Belum ada kegiatan pada status ini.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -121,7 +125,7 @@ export default async function PencairanPage({ searchParams }: { searchParams: Pr
             </table>
           </div>
         )}
-        <PaginationBar meta={list.meta} basePath="/pencairan" params={{ state: state || undefined }} />
+        <PaginationBar meta={list.meta} basePath="/pencairan" params={{ state: state || undefined, search: search || undefined }} />
       </div>
     </div>
   );

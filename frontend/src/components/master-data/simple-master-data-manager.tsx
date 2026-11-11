@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common/page-header';
+import { ClientPagination } from '@/components/common/client-pagination';
+import { SearchInput } from '@/components/common/search-input';
+import { useClientList } from '@/lib/use-client-list';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
 import {
@@ -100,6 +103,7 @@ export function SimpleMasterDataManager({
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const list = useClientList(items, (i) => [i.code, i.name, i.unit, i.description].filter(Boolean).join(' '));
 
   function openCreate() {
     setEditingId(null);
@@ -208,8 +212,17 @@ export function SimpleMasterDataManager({
       {tabs}
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
+        {items.length > 0 && (
+          <div className="p-space-sm border-b border-outline-variant/30">
+            <SearchInput value={list.query} onChange={list.setQuery} placeholder="Cari kode, nama, atau deskripsi..." />
+          </div>
+        )}
         {items.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">{emptyLabel}</div>
+        ) : list.matched === 0 ? (
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
+            Tidak ada data yang cocok dengan &ldquo;{list.query.trim()}&rdquo;.
+          </div>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -224,7 +237,7 @@ export function SimpleMasterDataManager({
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-low">
-                {items.map((item) => (
+                {list.pageItems.map((item) => (
                   <tr key={item.id} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="px-space-base py-space-sm font-mono text-outline">{item.code}</td>
                     <td className="px-space-base py-space-sm font-label-md text-label-md font-semibold text-on-surface">{item.name}</td>
@@ -276,6 +289,7 @@ export function SimpleMasterDataManager({
             </table>
           </div>
         )}
+        <ClientPagination page={list.page} lastPage={list.lastPage} pageSize={list.pageSize} matched={list.matched} total={list.total} onPage={list.setPage} />
       </div>
 
       {open && (

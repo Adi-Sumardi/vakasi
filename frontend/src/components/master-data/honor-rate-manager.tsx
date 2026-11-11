@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common/page-header';
+import { ClientPagination } from '@/components/common/client-pagination';
+import { SearchInput } from '@/components/common/search-input';
+import { useClientList } from '@/lib/use-client-list';
 import { CurrencyInput } from '@/components/common/currency-input';
 import { Icon } from '@/components/ui/icon';
 import { ApiError } from '@/lib/api/types';
@@ -69,6 +72,7 @@ export function HonorRateManager({
   const [busyId, setBusyId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm(honorTypes));
   const [decreeFile, setDecreeFile] = useState<File | null>(null);
+  const list = useClientList(rates, (r) => [r.honor_type.name, r.honor_type.unit, r.unit?.name ?? 'Semua Unit', r.decree_number, r.rate].filter(Boolean).join(' '));
   const uploadTarget = useRef<number | null>(null);
   const rowFileInput = useRef<HTMLInputElement>(null);
 
@@ -210,8 +214,17 @@ export function HonorRateManager({
       {tabs}
 
       <div className="bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30 overflow-hidden">
+        {rates.length > 0 && (
+          <div className="p-space-sm border-b border-outline-variant/30">
+            <SearchInput value={list.query} onChange={list.setQuery} placeholder="Cari jenis honor, nomor SK, atau unit..." />
+          </div>
+        )}
         {rates.length === 0 ? (
           <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">Belum ada tarif honor.</div>
+        ) : list.matched === 0 ? (
+          <div className="p-space-2xl text-center text-on-surface-variant font-body-md text-body-md">
+            Tidak ada tarif yang cocok dengan &ldquo;{list.query.trim()}&rdquo;.
+          </div>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left font-body-sm text-body-sm border-collapse">
@@ -227,7 +240,7 @@ export function HonorRateManager({
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-low">
-                {rates.map((r) => (
+                {list.pageItems.map((r) => (
                   <tr key={r.id} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="px-space-base py-space-sm font-label-md text-label-md font-semibold text-on-surface">
                       {r.honor_type.name} <span className="text-outline font-normal">/ {r.honor_type.unit}</span>
@@ -317,6 +330,7 @@ export function HonorRateManager({
             </table>
           </div>
         )}
+        <ClientPagination page={list.page} lastPage={list.lastPage} pageSize={list.pageSize} matched={list.matched} total={list.total} onPage={list.setPage} />
       </div>
 
       {open && (

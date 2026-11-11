@@ -83,6 +83,7 @@ class ReportController extends Controller
 
         $details = HonorDetail::query()
             ->where('employee_id', $employeeId)
+            ->when(trim($request->string('search')->toString()), fn ($q, string $s) => $q->whereHas('activity', fn ($a) => $a->search($s)))
             ->with(['activity.unit', 'activity.disbursement.latestEvent', 'honorType', 'activityMember'])
             ->latest()
             ->paginate($this->perPage($request));
