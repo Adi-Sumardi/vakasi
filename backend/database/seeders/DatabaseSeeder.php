@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(MasterDataSeeder::class);
+        $this->call(SkYayasan2016Seeder::class);
 
         $roles = Role::pluck('id', 'name');
 
