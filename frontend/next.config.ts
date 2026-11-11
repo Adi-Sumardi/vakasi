@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Hanya logo & ikon lokal; optimasi gambar butuh sharp versi server.
   images: { unoptimized: true },
+  // Server renders call Laravel directly (see SERVER_API_URL in lib/api/config.ts).
+  env: { SERVER_API_URL: apiProxyTarget ?? "" },
   async rewrites() {
     if (!apiProxyTarget) return [];
     return [

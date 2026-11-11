@@ -2,7 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 
-import { API_URL, APP_URL } from '@/lib/api/config';
+import { APP_URL, SERVER_API_URL } from '@/lib/api/config';
 import { ApiError, type ApiErrorBody, type ApiSuccess } from '@/lib/api/types';
 
 /**
@@ -64,7 +64,7 @@ async function request<T>(path: string): Promise<ApiSuccess<T> & { meta?: unknow
     .map((cookie) => `${cookie.name}=${cookie.value}`)
     .join('; ');
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${SERVER_API_URL}${path}`, {
     headers: {
       Accept: 'application/json',
       Cookie: cookieHeader,
